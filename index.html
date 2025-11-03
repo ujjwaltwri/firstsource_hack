@@ -98,15 +98,15 @@
   </head>
   <body>
     <div class="container">
-      <h1>🏥 Provider Directory Validation</h1>
+      <h1>Provider Directory Validation</h1>
 
-      <h2>NPI + Google Maps Validation</h2>
+      <h2>NPI & Google Maps Validation</h2>
       <p>
         Click the button to run the validation on the
         <code>input_providers.csv</code> file stored on the server.
       </p>
       <button id="runValidationBtn">Run Validation</button>
-      <div id="loader">🔄 Running validation... Please wait.</div>
+      <div id="loader">Running validation... Please wait.</div>
 
       <table id="resultsTable">
         <thead>
@@ -151,7 +151,7 @@
         loader.style.display = "block";
         validationBtn.disabled = true;
         resultsBody.innerHTML =
-          '<tr><td colspan="7">🔄 Processing... please wait.</td></tr>';
+          '<tr><td colspan="7">Processing... please wait.</td></tr>';
 
         try {
           // 2. Call the POST /api/run-validation endpoint
