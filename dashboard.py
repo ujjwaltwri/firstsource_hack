@@ -112,14 +112,14 @@ with st.sidebar:
     # Quick Stats
     df_results = load_validation_results()
     if df_results is not None:
-        st.metric("📊 Total Providers", len(df_results))
-        st.metric("⚡ Avg Confidence", f"{df_results['confidence_score'].mean():.1f}%")
-        st.metric("✅ Verification Rate", f"{len(df_results[df_results['confidence_score'] >= 80])/len(df_results)*100:.0f}%")
+        st.metric("Total Providers", len(df_results))
+        st.metric("Avg Confidence", f"{df_results['confidence_score'].mean():.1f}%")
+        st.metric("Verification Rate", f"{len(df_results[df_results['confidence_score'] >= 80])/len(df_results)*100:.0f}%")
     
     st.markdown("---")
     
     # Filters
-    st.subheader("🔍 Filters")
+    st.subheader("Filters")
     min_confidence = st.slider("Min Confidence", 0, 100, 0, 5)
     
     status_filter = st.multiselect(
@@ -131,25 +131,25 @@ with st.sidebar:
     st.markdown("---")
     
     # Actions
-    st.subheader("⚡ Quick Actions")
-    if st.button("🔄 Refresh Data", use_container_width=True):
+    st.subheader("Quick Actions")
+    if st.button("Refresh Data", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
     
-    if st.button("📥 Export Report", use_container_width=True):
+    if st.button("Export Report", use_container_width=True):
         st.success("Report exported!")
     
     st.markdown("---")
-    st.caption("🏆 Hackathon Project | Firstsource Challenge")
+    st.caption("Hackathon Project | Firstsource Challenge")
 
 # Main Tabs
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "📊 Dashboard",
-    "📋 Validation Results",
-    "🔍 Provider Search",
-    "📧 Communications",
-    "📈 Analytics",
-    "🎯 Demo"
+    "Dashboard",
+    "Validation Results",
+    "Provider Search",
+    "Communications",
+    "Analytics",
+    "Demo"
 ])
 
 # TAB 1: EXECUTIVE DASHBOARD
@@ -167,20 +167,20 @@ with tab1:
         avg_conf = df_results['confidence_score'].mean()
         
         with col1:
-            st.metric("📁 Total Providers", f"{total}", help="Total providers validated")
+            st.metric("Total Providers", f"{total}", help="Total providers validated")
         with col2:
-            st.metric("✅ High Confidence", f"{verified}", f"{verified/total*100:.0f}%", delta_color="normal")
+            st.metric("High Confidence", f"{verified}", f"{verified/total*100:.0f}%", delta_color="normal")
         with col3:
-            st.metric("📝 Needs Update", f"{needs_update}", help="Requires data correction")
+            st.metric("Needs Update", f"{needs_update}", help="Requires data correction")
         with col4:
-            st.metric("⚠️ Needs Review", f"{needs_review}", help="Manual verification needed")
+            st.metric("Needs Review", f"{needs_review}", help="Manual verification needed")
         with col5:
-            st.metric("📊 Avg Confidence", f"{avg_conf:.1f}%", help="Average validation confidence")
+            st.metric("Avg Confidence", f"{avg_conf:.1f}%", help="Average validation confidence")
         
         st.markdown("---")
         
         # ROI Calculator
-        st.subheader("💰 ROI & Cost Savings")
+        st.subheader("ROI & Cost Savings")
         col1, col2, col3 = st.columns(3)
         
         manual_hours = total * 12 / 60
@@ -189,12 +189,12 @@ with tab1:
         savings = (manual_hours - automated_hours) * cost_per_hour
         
         with col1:
-            st.metric("⏱️ Time Saved", f"{manual_hours - automated_hours:.1f} hours", 
+            st.metric("Time Saved", f"{manual_hours - automated_hours:.1f} hours", 
                      f"{(manual_hours - automated_hours) / manual_hours * 100:.0f}% reduction")
         with col2:
-            st.metric("💵 Cost Savings", f"${savings:.2f}", "vs manual validation")
+            st.metric("Cost Savings", f"${savings:.2f}", "vs manual validation")
         with col3:
-            st.metric("🚀 Speed Improvement", f"{manual_hours / automated_hours:.0f}x faster", "Automated vs Manual")
+            st.metric("Speed Improvement", f"{manual_hours / automated_hours:.0f}x faster", "Automated vs Manual")
         
         st.markdown("---")
         
@@ -202,7 +202,7 @@ with tab1:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("📈 Confidence Score Distribution")
+            st.subheader("Confidence Score Distribution")
             
             # Create bins for confidence scores
             bins = [0, 50, 70, 80, 90, 100]
@@ -229,7 +229,7 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
         
         with col2:
-            st.subheader("🎯 Validation Status Breakdown")
+            st.subheader("Validation Status Breakdown")
             
             status_summary = df_results['status'].value_counts()
             
@@ -251,7 +251,7 @@ with tab1:
         
         # Geographic Analysis
         if 'city' in df_results.columns:
-            st.subheader("🗺️ Geographic Coverage")
+            st.subheader("Geographic Coverage")
             
             col1, col2 = st.columns([2, 1])
             
@@ -283,7 +283,7 @@ with tab1:
                 st.plotly_chart(fig, use_container_width=True)
             
             with col2:
-                st.markdown("### 📍 Top Cities")
+                st.markdown("### Top Cities")
                 for idx, (city, row) in enumerate(city_stats.head(5).iterrows(), 1):
                     st.markdown(f"**{idx}. {city}**")
                     st.caption(f"{int(row['Providers'])} providers | {row['Avg Confidence']:.1f}% confidence")
@@ -291,7 +291,7 @@ with tab1:
                     st.markdown("")
         
     else:
-        st.warning("⚠️ No validation data found. Please run the validation script first.")
+        st.warning("No validation data found. Please run the validation script first.")
         st.code("python solve_hack.py", language="bash")
 
 # TAB 2: VALIDATION RESULTS
@@ -299,7 +299,7 @@ with tab2:
     df_results = load_validation_results()
     
     if df_results is not None:
-        st.subheader("📋 Detailed Provider Validation Results")
+        st.subheader("Detailed Provider Validation Results")
         
         # Apply filters
         filtered_df = df_results.copy()
@@ -311,7 +311,7 @@ with tab2:
             mask = filtered_df['status'].str.contains('|'.join(status_filter), na=False, case=False)
             filtered_df = filtered_df[mask]
         
-        st.info(f"📊 Showing **{len(filtered_df)}** of **{len(df_results)}** providers")
+        st.info(f"Showing **{len(filtered_df)}** of **{len(df_results)}** providers")
         
         # Add color coding
         def color_confidence(val):
@@ -340,7 +340,7 @@ with tab2:
         with col1:
             csv = filtered_df.to_csv(index=False)
             st.download_button(
-                "📥 Download CSV",
+                "Download CSV",
                 csv,
                 f"validation_results_{datetime.now().strftime('%Y%m%d')}.csv",
                 "text/csv",
@@ -350,7 +350,7 @@ with tab2:
         with col2:
             json_data = filtered_df.to_json(orient='records', indent=2)
             st.download_button(
-                "📥 Download JSON",
+                "Download JSON",
                 json_data,
                 f"validation_results_{datetime.now().strftime('%Y%m%d')}.json",
                 "application/json",
@@ -358,15 +358,15 @@ with tab2:
             )
         
         with col3:
-            if st.button("📊 Generate Report", use_container_width=True):
-                st.success("✅ Executive report generated!")
+            if st.button("Generate Report", use_container_width=True):
+                st.success("Executive report generated!")
 
 # TAB 3: PROVIDER SEARCH
 with tab3:
     df_results = load_validation_results()
     
     if df_results is not None:
-        st.subheader("🔍 Smart Provider Search")
+        st.subheader("Smart Provider Search")
         
         col1, col2 = st.columns([3, 1])
         
@@ -401,10 +401,10 @@ with tab3:
                 results = df_results[df_results.get('city', pd.Series()).str.lower().str.contains(query_lower, na=False)]
             
             if len(results) > 0:
-                st.success(f"✅ Found **{len(results)}** matching provider(s)")
+                st.success(f"Found **{len(results)}** matching provider(s)")
                 
                 for idx, row in results.iterrows():
-                    with st.expander(f"📋 {row['name']} ({row['provider_id']}) - Confidence: {row['confidence_score']}%"):
+                    with st.expander(f"{row['name']} ({row['provider_id']}) - Confidence: {row['confidence_score']}%"):
                         col1, col2, col3 = st.columns(3)
                         
                         with col1:
@@ -415,55 +415,55 @@ with tab3:
                             st.write(f"**Mobile:** {row.get('mobile', 'N/A')}")
                         
                         with col2:
-                            st.markdown("### 🏥 Practice Info")
+                            st.markdown("### Practice Info")
                             st.write(f"**Hospital:** {row.get('hospital', 'N/A')}")
                             st.write(f"**City:** {row.get('city', 'N/A')}")
                             st.write(f"**Specialization:** {row.get('specialization', 'N/A')}")
                             st.write(f"**Registration:** {row.get('registration_number', 'N/A')}")
                         
                         with col3:
-                            st.markdown("### ✅ Validation Status")
+                            st.markdown("### Validation Status")
                             
                             conf = row['confidence_score']
                             if conf >= 80:
-                                st.success(f"✅ {row['status']}")
+                                st.success(f"{row['status']}")
                             elif conf >= 50:
-                                st.warning(f"⚠️ {row['status']}")
+                                st.warning(f"{row['status']}")
                             else:
-                                st.error(f"❌ {row['status']}")
+                                st.error(f"{row['status']}")
                             
                             st.metric("Confidence Score", f"{conf}%")
                             
                             st.write(f"**Suggested Phone:** {row.get('suggested_phone', 'N/A')}")
                             st.write(f"**Google Phone:** {row.get('google_phone', 'N/A')}")
             else:
-                st.warning("❌ No providers found matching your search.")
+                st.warning("No providers found matching your search.")
     else:
         st.warning("No data available.")
 
 # TAB 4: COMMUNICATIONS
 with tab4:
-    st.subheader("📧 Automated Provider Communications")
+    st.subheader("Automated Provider Communications")
     
     emails_df = load_emails()
     df_results = load_validation_results()
     
     if emails_df is not None:
-        st.success(f"✅ {len(emails_df)} verification emails generated and ready to send")
+        st.success(f"{len(emails_df)} verification emails generated and ready to send")
         
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("📧 Total Emails", len(emails_df))
+            st.metric("Total Emails", len(emails_df))
         with col2:
-            st.metric("⚠️ High Priority", len(emails_df[emails_df['provider_id'].str.startswith('P')]))
+            st.metric("High Priority", len(emails_df[emails_df['provider_id'].str.startswith('P')]))
         with col3:
-            if st.button("📤 Send All Emails", use_container_width=True):
-                st.success("✅ Emails queued for delivery!")
+            if st.button("Send All Emails", use_container_width=True):
+                st.success("Emails queued for delivery!")
         
         st.markdown("---")
         
         # Email preview
-        st.subheader("📝 Email Preview")
+        st.subheader("Email Preview")
         
         selected_provider = st.selectbox(
             "Select Provider",
@@ -482,35 +482,35 @@ with tab4:
             
             col_a, col_b, col_c = st.columns(3)
             with col_a:
-                if st.button("📧 Send Email", use_container_width=True):
-                    st.success(f"✅ Email sent to {email_data['provider_name']}")
+                if st.button("Send Email", use_container_width=True):
+                    st.success(f"Email sent to {email_data['provider_name']}")
             with col_b:
-                if st.button("📋 Copy", use_container_width=True):
+                if st.button("Copy", use_container_width=True):
                     st.info("Copied to clipboard!")
             with col_c:
-                if st.button("💾 Save Draft", use_container_width=True):
+                if st.button("Save Draft", use_container_width=True):
                     st.success("Draft saved!")
         
         with col2:
-            st.markdown("### 📊 Provider Details")
+            st.markdown("### Provider Details")
             provider = df_results[df_results['name'] == selected_provider].iloc[0]
             st.write(f"**Status:** {provider['status']}")
             st.write(f"**Confidence:** {provider['confidence_score']}%")
             st.write(f"**Phone:** {provider.get('phone', 'N/A')}")
             
-            st.markdown("### ⚠️ Issues")
+            st.markdown("### Issues")
             if provider['confidence_score'] < 70:
                 st.warning("• Low confidence score")
             if provider.get('google_phone') and provider.get('google_phone') != provider.get('phone'):
                 st.warning("• Phone mismatch detected")
     
     elif df_results is not None:
-        st.info("📧 Generate emails by running: `python email_generator.py`")
+        st.info("Generate emails by running: `python email_generator.py`")
         
-        if st.button("🚀 Generate Emails Now", use_container_width=True, type="primary"):
+        if st.button("Generate Emails Now", use_container_width=True, type="primary"):
             with st.spinner("Generating personalized emails..."):
                 st.code("python email_generator.py", language="bash")
-                st.success("✅ Run the command above to generate emails!")
+                st.success("Run the command above to generate emails!")
     else:
         st.warning("No data available.")
 
@@ -525,7 +525,7 @@ with tab5:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("### 🎯 Confidence Score by Specialization")
+            st.markdown("### Confidence Score by Specialization")
             if 'specialization' in df_results.columns:
                 spec_conf = df_results.groupby('specialization')['confidence_score'].mean().sort_values(ascending=False).head(10)
                 
@@ -581,22 +581,22 @@ with tab5:
         st.markdown("---")
         
         # Quality metrics over time (simulated)
-        st.markdown("### 📊 System Performance Metrics")
+        st.markdown("### System Performance Metrics")
         
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("⚡ Processing Speed", "500+ providers/hour")
+            st.metric("Processing Speed", "500+ providers/hour")
         with col2:
-            st.metric("🎯 Accuracy Rate", "85%+")
+            st.metric("Accuracy Rate", "85%+")
         with col3:
-            st.metric("💰 Cost per Provider", "$0.05")
+            st.metric("Cost per Provider", "$0.05")
         with col4:
-            st.metric("⏱️ Avg Processing Time", "0.9 sec")
+            st.metric("Avg Processing Time", "0.9 sec")
 
 # TAB 6: DEMO MODE
 with tab6:
-    st.subheader("🎯 Live Demo & Presentation Mode")
+    st.subheader("Live Demo & Presentation Mode")
     
     st.markdown("""
     ### 🏆 Hackathon Demo Flow
@@ -608,50 +608,50 @@ with tab6:
     
     with col1:
         st.markdown("""
-        #### ✅ What We Built
+        #### What We Built
         
         1. **Multi-Regional Validation System**
-           - ✅ US Providers: NPI Registry
-           - ✅ Indian Providers: State Medical Councils
-           - ✅ Universal: Google Maps API
+           - US Providers: NPI Registry
+           - Indian Providers: State Medical Councils
+           - Universal: Google Maps API
         
         2. **AI-Powered Agents**
-           - 🤖 Data Validation Agent
-           - 🤖 Information Enrichment Agent
-           - 🤖 Quality Assurance Agent
-           - 🤖 Directory Management Agent
+           - Data Validation Agent
+           - Information Enrichment Agent
+           - Quality Assurance Agent
+           - Directory Management Agent
         
         3. **Automated Communications**
-           - 📧 200+ personalized emails
-           - 📊 Executive reports
-           - 🎯 Priority lists
+           - 200+ personalized emails
+           - Executive reports
+           - Priority lists
         """)
     
     with col2:
         st.markdown("""
-        #### 📊 Key Results
+        #### Key Results
         
         - **200 providers** validated in **< 5 minutes**
         - **75.8% average** confidence score
         - **95% time reduction** vs manual
         - **$500+ cost savings** per batch
         
-        #### 🎯 Business Impact
+        #### Business Impact
         
-        - ✅ Reduced member complaints
-        - ✅ Regulatory compliance
-        - ✅ Network accuracy improvement
-        - ✅ Operational efficiency
+        - Reduced member complaints
+        - Regulatory compliance
+        - Network accuracy improvement
+        - Operational efficiency
         """)
     
     st.markdown("---")
     
     # Live validation demo
-    st.markdown("### 🚀 Try It Live")
+    st.markdown("### Try It Live")
     
     demo_provider = st.text_input("Enter a provider name to validate", "Dr. Rajesh Kumar")
     
-    if st.button("🔍 Validate Provider", type="primary"):
+    if st.button("Validate Provider", type="primary"):
         with st.spinner("Validating across multiple sources..."):
             import time
             time.sleep(2)
@@ -659,15 +659,15 @@ with tab6:
             col1, col2, col3 = st.columns(3)
             
             with col1:
-                st.success("✅ NPI/Medical Council")
+                st.success("NPI/Medical Council")
                 st.caption("Registration verified")
             
             with col2:
-                st.success("✅ Google Maps")
+                st.success("Google Maps")
                 st.caption("Location confirmed")
             
             with col3:
-                st.warning("⚠️ Phone Mismatch")
+                st.warning("Phone Mismatch")
                 st.caption("Needs update")
             
             st.balloons()
@@ -677,13 +677,13 @@ st.markdown("---")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown("🏥 **Provider Validation System**")
+    st.markdown("**Provider Validation System**")
     st.caption("Built for Firstsource Hackathon")
 
 with col2:
-    st.markdown("🤖 **Powered by AI Agents**")
+    st.markdown("**Powered by AI Agents**")
     st.caption("Multi-source validation")
 
 with col3:
-    st.markdown("📊 **Real-time Analytics**")
+    st.markdown("**Real-time Analytics**")
     st.caption("Actionable insights")
