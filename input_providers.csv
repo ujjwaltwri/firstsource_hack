@@ -1,4 +1,4 @@
 provider_id,name,address,phone,npi_number
-1,Dr. Anthony Roppo,123 Fake St,Syracuse,NY,555-9999,1982604049
-2,Leesburg OBGYN,456 Real St,Leesburg,VA,703-777-1100,1003000498
-3,Dr. No One,789 Error Ln,Miami,FL,555-1111,1234567890
+1,Dr. Anthony Roppo,"123 Fake St, Syracuse, NY",555-9999,1982604049
+2,Leesburg OBGYN,"456 Real St, Leesburg, VA",703-777-1100,1003000498
+3,Dr. No One,"789 Error Ln, Miami, FL",555-1111,1234567890
