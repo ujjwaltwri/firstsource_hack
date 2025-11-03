@@ -1,412 +1,100 @@
 {
   "model_used": "Tesseract OCR",
-  "best_preprocessing_method": "adaptive_threshold",
-  "total_characters_extracted": 532,
-  "full_text": "Gi ROYAL . :\nHOSPITAL Ga a\ncm :\nDR.A.KALAIARASAN | Koy ;\nSe\nENDOSCOPIC ENT, HEAD & NECK . . A\\i \\ , en\nSURGEON TN y/ oka\nSPECIALIST IN: i Oy Oi a\nUW EAR PAIN & INFECTIONS a ef\nA THROAT PAIN & SORE THROAT 1 \u201cSp fs to\nWU TONSILLITIS a Sipe sys ie\nU ALLERGIES\nWU STUFFY & RUNNING NOSE\nVU SNEEZING\nU_ SNOORING\n/ HEARING Loss\n/ VERTIGO & HEAD ACHE\nW ACID REFLUX\nUW FOREIGN BODY REMOVAL\nW THYROID & THYROID SURGERIES\nway <4. CONTACT US\n\u2014\ni B% info@royalhospital.net.in\na \u2018Slee & www.royalhospital.net.in\naaa 1 SY 04343-230455\nOE ae CE | }\n",
+  "best_preprocessing_method": "clahe_otsu",
+  "total_characters_extracted": 235,
+  "full_text": "HEALTH CONTACT ME AT\n\nCONSULTATION 8441920626\n\nyour health is our\n\npriority\n\nDr Manmahendra singh\n\nMBBS MD(Medicine) S\n\n(General physician \u2014 a. ~~ S\n\nRMC 34632  r_\n\u201cVishnu medical a ay\n\nNear 16 no OPD i oe 8\n\nShastri nagar road\nBikaner\n",
   "lines_with_confidence": [
     {
-      "text": "G",
-      "confidence": 92
-    },
-    {
-      "text": "ROYAL",
-      "confidence": 4
-    },
-    {
-      "text": "HOSPITAL",
+      "text": "HEALTH",
       "confidence": 96
-    },
-    {
-      "text": "DR.A.KALAIARASAN",
-      "confidence": 75
-    },
-    {
-      "text": "D.L.O",
-      "confidence": 92
-    },
-    {
-      "text": "\u2018a",
-      "confidence": 34
-    },
-    {
-      "text": "\\",
-      "confidence": 92
-    },
-    {
-      "text": "ENDOSCOPIC",
-      "confidence": 96
-    },
-    {
-      "text": "ENT,",
-      "confidence": 96
-    },
-    {
-      "text": "HEAD",
-      "confidence": 93
-    },
-    {
-      "text": "&",
-      "confidence": 93
-    },
-    {
-      "text": "NECK",
-      "confidence": 96
-    },
-    {
-      "text": "o",
-      "confidence": 1
-    },
-    {
-      "text": ",",
-      "confidence": 0
-    },
-    {
-      "text": "|",
-      "confidence": 78
-    },
-    {
-      "text": "a",
-      "confidence": 58
-    },
-    {
-      "text": "SURGEON",
-      "confidence": 96
-    },
-    {
-      "text": "JA",
-      "confidence": 53
-    },
-    {
-      "text": "j",
-      "confidence": 0
-    },
-    {
-      "text": "\u2018",
-      "confidence": 67
-    },
-    {
-      "text": "rf",
-      "confidence": 28
-    },
-    {
-      "text": "\u2014",
-      "confidence": 31
-    },
-    {
-      "text": "a:",
-      "confidence": 48
-    },
-    {
-      "text": ";",
-      "confidence": 17
-    },
-    {
-      "text": "SPECIALIST",
-      "confidence": 76
-    },
-    {
-      "text": "IN:",
-      "confidence": 76
-    },
-    {
-      "text": "\u2018",
-      "confidence": 37
-    },
-    {
-      "text": "ty",
-      "confidence": 0
-    },
-    {
-      "text": "\u2018",
-      "confidence": 37
-    },
-    {
-      "text": "7",
-      "confidence": 47
-    },
-    {
-      "text": "UW",
-      "confidence": 67
-    },
-    {
-      "text": "EAR",
-      "confidence": 67
-    },
-    {
-      "text": "PAIN",
-      "confidence": 87
-    },
-    {
-      "text": "&",
-      "confidence": 92
-    },
-    {
-      "text": "INFECTIONS",
-      "confidence": 96
-    },
-    {
-      "text": "ion",
-      "confidence": 23
-    },
-    {
-      "text": "Ss",
-      "confidence": 50
-    },
-    {
-      "text": "THROAT",
-      "confidence": 96
-    },
-    {
-      "text": "PAIN",
-      "confidence": 93
-    },
-    {
-      "text": "&",
-      "confidence": 93
-    },
-    {
-      "text": "SORE",
-      "confidence": 96
-    },
-    {
-      "text": "THROAT",
-      "confidence": 96
-    },
-    {
-      "text": "Ss",
-      "confidence": 53
-    },
-    {
-      "text": "TONSILLITIS",
-      "confidence": 91
-    },
-    {
-      "text": "UV",
-      "confidence": 39
-    },
-    {
-      "text": "ALLERGIES",
-      "confidence": 93
-    },
-    {
-      "text": ";",
-      "confidence": 22
-    },
-    {
-      "text": "S",
-      "confidence": 79
-    },
-    {
-      "text": "STUFFY",
-      "confidence": 90
-    },
-    {
-      "text": "&",
-      "confidence": 92
-    },
-    {
-      "text": "RUNNING",
-      "confidence": 96
-    },
-    {
-      "text": "NOSE",
-      "confidence": 96
-    },
-    {
-      "text": "S",
-      "confidence": 82
-    },
-    {
-      "text": "SNEEZING",
-      "confidence": 96
-    },
-    {
-      "text": "S",
-      "confidence": 83
-    },
-    {
-      "text": "SNOORING",
-      "confidence": 90
-    },
-    {
-      "text": "Ss",
-      "confidence": 64
-    },
-    {
-      "text": "HEARING",
-      "confidence": 96
-    },
-    {
-      "text": "LOSS",
-      "confidence": 96
-    },
-    {
-      "text": "WA",
-      "confidence": 64
-    },
-    {
-      "text": "VERTIGO",
-      "confidence": 91
-    },
-    {
-      "text": "&",
-      "confidence": 91
-    },
-    {
-      "text": "HEAD",
-      "confidence": 96
-    },
-    {
-      "text": "ACHE",
-      "confidence": 96
-    },
-    {
-      "text": "WW",
-      "confidence": 9
-    },
-    {
-      "text": "ACID",
-      "confidence": 74
-    },
-    {
-      "text": "REFLUX",
-      "confidence": 95
-    },
-    {
-      "text": "WA",
-      "confidence": 64
-    },
-    {
-      "text": "FOREIGN",
-      "confidence": 96
-    },
-    {
-      "text": "BODY",
-      "confidence": 96
-    },
-    {
-      "text": "REMOVAL",
-      "confidence": 95
-    },
-    {
-      "text": "Ss",
-      "confidence": 38
-    },
-    {
-      "text": "THYROID",
-      "confidence": 92
-    },
-    {
-      "text": "&",
-      "confidence": 92
-    },
-    {
-      "text": "THYROID",
-      "confidence": 95
-    },
-    {
-      "text": "SURGERIES",
-      "confidence": 96
-    },
-    {
-      "text": "yh",
-      "confidence": 36
     },
     {
       "text": "CONTACT",
       "confidence": 96
     },
     {
-      "text": "US",
+      "text": "ME",
       "confidence": 96
     },
     {
-      "text": "-",
-      "confidence": 0
+      "text": "AT",
+      "confidence": 96
     },
     {
-      "text": "4",
-      "confidence": 59
+      "text": "CONSULTATION",
+      "confidence": 95
     },
     {
-      "text": ":",
-      "confidence": 1
+      "text": "8441920626",
+      "confidence": 95
     },
     {
-      "text": "BG",
-      "confidence": 30
+      "text": "your",
+      "confidence": 96
     },
     {
-      "text": "info@royalhospital.net.in",
+      "text": "health",
+      "confidence": 96
+    },
+    {
+      "text": "is",
+      "confidence": 95
+    },
+    {
+      "text": "our",
+      "confidence": 95
+    },
+    {
+      "text": "priority",
+      "confidence": 96
+    },
+    {
+      "text": "Dr",
+      "confidence": 91
+    },
+    {
+      "text": "Manmahendra",
       "confidence": 90
     },
     {
-      "text": ":",
-      "confidence": 0
+      "text": "singh",
+      "confidence": 94
     },
     {
-      "text": "=",
-      "confidence": 19
+      "text": "MBBS",
+      "confidence": 92
     },
     {
-      "text": "am",
-      "confidence": 50
+      "text": "MD(Medicine)",
+      "confidence": 89
     },
     {
-      "text": "\\",
-      "confidence": 85
+      "text": "(General",
+      "confidence": 96
     },
     {
-      "text": "SF",
-      "confidence": 43
+      "text": "physician",
+      "confidence": 96
     },
     {
-      "text": "www.royalhospital.net.in",
-      "confidence": 61
+      "text": "RMC",
+      "confidence": 92
     },
     {
-      "text": "\\",
-      "confidence": 61
-    },
-    {
-      "text": "=",
-      "confidence": 61
-    },
-    {
-      "text": "t..",
-      "confidence": 0
-    },
-    {
-      "text": ";",
-      "confidence": 0
-    },
-    {
-      "text": "=",
-      "confidence": 76
+      "text": "34632",
+      "confidence": 96
     }
   ],
   "parsed_information": {
-    "doctor_name": "DR.A.KALAIARASAN Koy ;",
-    "credentials": null,
-    "hospital_name": "HOSPITAL Ga a",
-    "specialization": "ENDOSCOPIC ENT, HEAD & NECK Ai , en",
-    "phone_numbers": [
-      "04343230455"
-    ],
-    "email": "info@royalhospital.net.in",
-    "website": "www.royalhospital.net.in",
+    "doctor_name": "Dr Manmahendra singh",
+    "credentials": "MBBS MD(Medicine) S",
+    "hospital_name": null,
+    "specialization": null,
+    "phone_numbers": [],
+    "email": null,
+    "website": null,
     "conditions_treated": [
-      "UW EAR PAIN & INFECTIONS a ef",
-      "A THROAT PAIN & SORE THROAT Sp fs to",
-      "WU TONSILLITIS a Sipe sys ie",
-      "U ALLERGIES",
-      "WU STUFFY & RUNNING NOSE",
-      "VU SNEEZING",
-      "HEARING Loss",
-      "VERTIGO & HEAD ACHE",
-      "W ACID REFLUX",
-      "UW FOREIGN BODY REMOVAL",
-      "W THYROID & THYROID SURGERIES"
+      "Near no OPD i oe"
     ]
   },
   "all_methods_tested": [

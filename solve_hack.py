@@ -8,6 +8,14 @@ import cv2
 import numpy as np
 import pytesseract
 import re
+from pathlib import Path
+
+# Try to enable AVIF support
+try:
+    from pillow_avif import AvifImagePlugin
+    print("✓ AVIF support enabled")
+except ImportError:
+    print("⚠ AVIF support not available (install: pip install pillow-avif-plugin)")
 
 print("--- RUNNING solve_hack.py (HIGH ACCURACY Tesseract OCR) ---")
 
@@ -135,12 +143,56 @@ def run_full_validation():
 # --- AGENT 4: HIGH ACCURACY TESSERACT OCR ---
 print("Tesseract OCR ready for use.")
 
+def convert_image_to_supported_format(image_path):
+    """Convert any image format to PNG for processing."""
+    print(f"Converting image: {image_path}")
+    
+    try:
+        # Try to open with PIL first
+        img = Image.open(image_path)
+        
+        # Convert to RGB if necessary
+        if img.mode not in ('RGB', 'L'):
+            img = img.convert('RGB')
+        
+        # Save as temporary PNG
+        temp_path = 'temp_converted.png'
+        img.save(temp_path, 'PNG')
+        print(f"✓ Converted to PNG: {temp_path}")
+        return temp_path
+        
+    except Exception as e:
+        print(f"✗ PIL conversion failed: {e}")
+        
+        # Fallback: Try with OpenCV
+        try:
+            img = cv2.imread(image_path)
+            if img is None:
+                raise ValueError("OpenCV couldn't read the image")
+            
+            temp_path = 'temp_converted.png'
+            cv2.imwrite(temp_path, img)
+            print(f"✓ Converted to PNG using OpenCV: {temp_path}")
+            return temp_path
+            
+        except Exception as e2:
+            print(f"✗ OpenCV conversion also failed: {e2}")
+            raise ValueError(f"Unable to read image format: {image_path}")
+
 def enhance_image_for_ocr(image_path):
     """Apply multiple preprocessing techniques for best OCR results."""
     print("Enhancing image for OCR...")
     
+    # First convert to supported format if needed
+    file_ext = Path(image_path).suffix.lower()
+    if file_ext in ['.avif', '.webp', '.heic']:
+        image_path = convert_image_to_supported_format(image_path)
+    
     # Read image
     img = cv2.imread(image_path)
+    
+    if img is None:
+        raise ValueError(f"Could not read image: {image_path}")
     
     # Multiple preprocessing pipelines
     processed_images = []
@@ -186,14 +238,22 @@ def extract_data_from_image_tesseract(image_path):
     print(f"{'='*80}\n")
     
     try:
+        # First convert image if needed
+        file_ext = Path(image_path).suffix.lower()
+        working_path = image_path
+        
+        if file_ext in ['.avif', '.webp', '.heic']:
+            print(f"⚠ Detected {file_ext} format - converting to PNG...")
+            working_path = convert_image_to_supported_format(image_path)
+        
         # Get multiple preprocessed versions
-        processed_images = enhance_image_for_ocr(image_path)
+        processed_images = enhance_image_for_ocr(working_path)
         
         all_results = []
         
         # Try OCR on original image first
         print("▸ Running OCR on ORIGINAL image...")
-        original_img = Image.open(image_path)
+        original_img = Image.open(working_path)
         
         # Tesseract configuration for best accuracy
         custom_config = r'--oem 3 --psm 6'  # OEM 3 = Default, PSM 6 = Uniform block of text
@@ -244,6 +304,16 @@ def extract_data_from_image_tesseract(image_path):
             "parsed_information": parsed_info,
             "all_methods_tested": [m[0] for m in all_results]
         }
+        
+        # Save detailed results
+        with open('ocr_results.json', 'w') as f:
+            json.dump(final_result, f, indent=2)
+        
+        # Cleanup temporary files
+        if os.path.exists('temp_converted.png'):
+            os.remove('temp_converted.png')
+        if os.path.exists('temp_preprocessed.jpg'):
+            os.remove('temp_preprocessed.jpg')
         
         return final_result
         
@@ -351,7 +421,46 @@ if __name__ == "__main__":
     run_full_validation()
     
     # --- PART 2: HIGH-ACCURACY TESSERACT OCR EXTRACTION ---
-    vlm_data = extract_data_from_image_tesseract('pamplet 4.jpeg')
+    
+    # Option 1: Specify exact image file
+    image_file = 'dr-manmahendra-singh-gandhi-nagar-bikaner-general-physician-doctors-aSfQLWyhYW.jpg.avif'
+    
+    # Option 2: Auto-detect (uncomment to use)
+    # image_extensions = ['.avif', '.jpg', '.jpeg', '.png', '.webp']
+    # for ext in image_extensions:
+    #     files = list(Path('.').glob(f'*{ext}'))
+    #     # Filter out temp files
+    #     files = [f for f in files if not str(f).startswith('temp_')]
+    #     if files:
+    #         image_file = str(files[0])
+    #         break
+    
+    # Option 3: Process ALL images (uncomment to use)
+    # image_files = []
+    # for ext in ['.avif', '.jpg', '.jpeg', '.png', '.webp']:
+    #     files = list(Path('.').glob(f'*{ext}'))
+    #     files = [f for f in files if not str(f).startswith('temp_')]
+    #     image_files.extend(files)
+    # 
+    # for image_file in image_files:
+    #     print(f"\n{'='*80}")
+    #     print(f"📄 Processing image: {image_file}")
+    #     print(f"{'='*80}")
+    #     vlm_data = extract_data_from_image_tesseract(str(image_file))
+    #     # Process results...
+    
+    if not os.path.exists(image_file):
+        print(f"❌ Image file not found: {image_file}")
+        print("\nAvailable images in directory:")
+        for ext in ['.avif', '.jpg', '.jpeg', '.png', '.webp']:
+            files = list(Path('.').glob(f'*{ext}'))
+            for f in files:
+                print(f"  • {f}")
+        exit(1)
+    
+    print(f"\n📄 Processing image: {image_file}")
+    
+    vlm_data = extract_data_from_image_tesseract(image_file)
     
     print("\n" + "="*80)
     print("FULL EXTRACTED TEXT")
