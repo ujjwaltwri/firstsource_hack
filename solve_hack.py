@@ -3,26 +3,18 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 import json
-
-# --- VLM Imports ---
-import google.generativeai as genai
 from PIL import Image
+
+# --- PaddleOCR Imports ---
+# This is our new, 100% free VLM
+from paddleocr import PaddleOCR
+
+print("--- RUNNING solve_hack.py (Correct VLM / Correct NPI) ---")
 
 # Load the .env file to get our API keys
 load_dotenv()
 
-# --- VLM CLIENT (GEMINI) ---
-try:
-    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-    # We will try the 'gemini-pro-vision' model again
-    # The 404 error is an account/API key issue, not a code issue.
-    gemini_model = genai.GenerativeModel('gemini-pro-vision')
-    print("Gemini client initialized successfully.")
-except Exception as e:
-    print(f"Warning: Gemini client could not be initialized. VLM will not work. Error: {e}")
-    gemini_model = None
-
-# --- AGENT 1: NPI DATA VALIDATOR ---
+# --- AGENT 1: NPI DATA VALIDATOR (Working) ---
 def get_npi_data(npi_number):
     """Fetches provider data from the NPI registry."""
     url = f"https://npiregistry.cms.hhs.gov/api/?number={npi_number}&version=2.1"
@@ -61,7 +53,7 @@ def get_npi_data(npi_number):
         print(f"NPI API Error: {e}")
         return None
 
-# --- AGENT 2: GOOGLE MAPS VALIDATOR ---
+# --- AGENT 2: GOOGLE MAPS VALIDATOR (Working) ---
 def get_google_maps_data(provider_name, provider_address):
     """Fetches public data from Google Maps Places API."""
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
@@ -93,7 +85,7 @@ def get_google_maps_data(provider_name, provider_address):
         print(f"Google Maps API Error: {e}")
         return None
 
-# --- AGENT 3: QUALITY ASSURANCE (The "Brain") ---
+# --- AGENT 3: QUALITY ASSURANCE (Working) ---
 def validate_provider_row(row):
     """Cross-references NPI and Google Maps to find the truth."""
     input_phone = "".join(filter(str.isdigit, str(row['phone'])))[:10]
@@ -122,7 +114,7 @@ def validate_provider_row(row):
         "google_phone": google_phone
     }
 
-# --- Orchestrator ---
+# --- Orchestrator (Working) ---
 def run_full_validation():
     """Runs the entire cross-referencing pipeline."""
     try:
@@ -139,50 +131,48 @@ def run_full_validation():
     print("Validation complete! Results saved to 'validation_results.csv'")
     print(final_df)
 
-# --- Information Enrichment Agent (VLM) ---
-def extract_data_from_image(image_path):
-    if not gemini_model:
-        return {"error": "Gemini client is not initialized. Check API key."}
-    try:
-        img = Image.open(image_path)
-    except FileNotFoundError:
-        print(f"Error: Image file not found at {image_path}")
-        return {"error": "Could not read image file."}
-    except Exception as e:
-        print(f"Error opening image: {e}")
-        return {"error": str(e)}
 
-    prompt = """
-    You are an AI assistant for healthcare data management.
-    Analyze this image, which is a scanned document for a provider.
-    Extract the following information and return it ONLY as a valid JSON object:
-    - "name" (string)
-    - "phone" (string, just the numbers)
-    - "address" (string, full address)
-    If data is missing, set the value to null.
-    Do not add any text before or after the JSON.
-    """
-    
-    print(f"\n--- Starting Gemini VLM extraction for {image_path} ---")
+# --- AGENT 4: FREE VLM (CORRECT MODEL: PaddleOCR) ---
+print("Loading free PaddleOCR VLM model...")
+# This initializes the OCR model. lang='en' for English.
+ocr = PaddleOCR(use_textline_orientation=True, lang='en')
+print("Free PaddleOCR VLM model loaded successfully.")
+
+def extract_data_from_image_free(image_path):
+    """Uses a 100% free PaddleOCR model to READ the image."""
+        
+    print(f"\n--- Starting FREE VLM (PaddleOCR) extraction for {image_path} ---")
     
     try:
-        response = gemini_model.generate_content([prompt, img])
-        raw_text = response.text
-        print("Gemini Model Raw Output:", raw_text)
-        json_start = raw_text.find('{')
-        json_end = raw_text.rfind('}') + 1
-        json_string = raw_text[json_start:json_end]
-        json_data = json.loads(json_string)
-        return json_data
+        # --- FIX #2: We are using PaddleOCR. It's built for this. ---
+        # It will return a list of all text blocks it finds.
+        result = ocr.ocr(image_path)
+        
+        # We'll just extract the text parts for a clean list
+        extracted_text_list = []
+        if result and result[0]:
+            for line in result[0]:
+                extracted_text_list.append(line[1][0]) # line[1][0] is the text
+
+        final_result = {
+            "model_used": "PaddleOCR",
+            "extracted_lines": extracted_text_list
+        }
+        
+        print("Free VLM (PaddleOCR) extraction complete.")
+        return final_result
+        
     except Exception as e:
-        print(f"Error with Gemini API call: {e}")
+        print(f"Error during VLM processing: {e}")
         return {"error": str(e)}
 
-# --- This allows us to run this file directly OR import from it ---
+# --- This is the main script that runs ---
 if __name__ == "__main__":
+    
+    # --- PART 1: NPI + Google Maps Validation ---
     run_full_validation()
     
-    print("\n--- Testing VLM Extraction ---")
-    vlm_data = extract_data_from_image('pamplet 4.jpeg')
-    print("\nExtracted VLM Data (as JSON):")
+    # --- PART 2: VLM EXTRACTION ---
+    vlm_data = extract_data_from_image_free('pamplet 4.jpeg')
+    print("\nExtracted VLM Data (100% Free OCR):")
     print(vlm_data)
