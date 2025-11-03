@@ -1,0 +1,14 @@
+# Python virtual environment
+venv/
+
+# Python cache
+__pycache__/
+
+# Secret keys
+.env
+
+# Output files (We don't want to track data, just code)
+*.csv
+
+# Add this one back so Git *does* track your input
+!input_providers.csv
