@@ -1,89 +1,253 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Provider Directory Dashboard</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Techathon VI: Provider Validation</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        table { border-collapse: collapse; width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background-color: #f4f4f4; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .status-UPDATED { background-color: #fff3cd; color: #856404; }
-        .status-VERIFIED_OK { background-color: #d4edda; color: #155724; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f8f9fa;
+      }
+      .container {
+        max-width: 1200px;
+        margin: auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+      h1,
+      h2 {
+        color: #333;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-right: 10px;
+        transition: background-color 0.2s;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+
+      /* Status-specific coloring */
+      .status-VERIFIED_OK {
+        background-color: #e6ffec;
+        color: #006421;
+      }
+      .status-UPDATED {
+        background-color: #e6f7ff;
+        color: #0056b3;
+      }
+      .status-NEEDS_REVIEW {
+        background-color: #fff8e6;
+        color: #a66f00;
+      }
+      .status-ERROR_ALL_SOURCES {
+        background-color: #ffeee6;
+        color: #d90000;
+        font-weight: bold;
+      }
+
+      #loader {
+        display: none;
+        font-weight: bold;
+        color: #007bff;
+        margin: 15px 0;
+      }
+      #ocr-results {
+        background-color: #2b2b2b;
+        color: #f1f1f1;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 20px;
+        white-space: pre-wrap;
+        font-family: "Courier New", Courier, monospace;
+      }
     </style>
-</head>
-<body>
-    <h1>Provider Validation Dashboard</h1>
-    <button onclick="runValidation()">Run Validation</button>
-    <button onclick="runVLM()">Test VLM (pamplet 4.jpeg)</button>
-    <hr>
-    <h3>Validation Results</h3>
-    <table id="provider-table">
+  </head>
+  <body>
+    <div class="container">
+      <h1>🏥 Provider Directory Validation</h1>
+
+      <h2>NPI + Google Maps Validation</h2>
+      <p>
+        Click the button to run the validation on the
+        <code>input_providers.csv</code> file stored on the server.
+      </p>
+      <button id="runValidationBtn">Run Validation</button>
+      <div id="loader">🔄 Running validation... Please wait.</div>
+
+      <table id="resultsTable">
         <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Input Phone</th>
-                <th>Status</th>
-                <th>Confidence</th>
-                <th>Suggested Phone</th>
-                <th>NPI Phone</th>
-                <th>Google Phone</th>
-            </tr>
+          <tr>
+            <th>Name</th>
+            <th>Input Phone</th>
+            <th>Status</th>
+            <th>Suggested Phone</th>
+            <th>NPI Phone</th>
+            <th>Google Phone</th>
+            <th>Confidence</th>
+          </tr>
         </thead>
-        <tbody id="provider-body"></tbody>
-    </table>
-    <hr>
-    <h3>VLM Extraction Result:</h3>
-    <pre id="vlm-output"></pre>
+        <tbody id="resultsBody">
+          <tr>
+            <td colspan="7">Click "Run Validation" to see results.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Unstructured Data Extraction (OCR)</h2>
+      <p>
+        Click to run Tesseract OCR on the sample <code>pamplet 4.jpeg</code>
+        file on the server.
+      </p>
+      <button id="runOcrBtn">Extract Pamphlet Data</button>
+      <h3>Extracted JSON:</h3>
+      <pre id="ocr-results">Press the button to see extracted data...</pre>
+    </div>
 
     <script>
-        async function runValidation() {
-            await fetch('/api/run-validation', { method: 'POST' });
-            alert('Validation complete! Reloading data...');
-            loadData();
+      // Get references to all our interactive elements
+      const validationBtn = document.getElementById("runValidationBtn");
+      const ocrBtn = document.getElementById("runOcrBtn");
+      const loader = document.getElementById("loader");
+      const resultsBody = document.getElementById("resultsBody");
+      const ocrResultsEl = document.getElementById("ocr-results");
+
+      // === Validation Button Logic ===
+      validationBtn.addEventListener("click", async () => {
+        // 1. Show loader and disable button
+        loader.style.display = "block";
+        validationBtn.disabled = true;
+        resultsBody.innerHTML =
+          '<tr><td colspan="7">🔄 Processing... please wait.</td></tr>';
+
+        try {
+          // 2. Call the POST /api/run-validation endpoint
+          // This tells the backend to create the 'validation_results.csv'
+          const postResponse = await fetch("/api/run-validation", {
+            method: "POST",
+          });
+
+          if (!postResponse.ok) {
+            throw new Error(
+              `Error during validation run: ${postResponse.statusText}`
+            );
+          }
+
+          // 3. Now, call the GET /api/validation-results endpoint
+          const getResponse = await fetch("/api/validation-results");
+          if (!getResponse.ok) {
+            throw new Error(
+              `Error fetching results: ${getResponse.statusText}`
+            );
+          }
+
+          const results = await getResponse.json();
+
+          // 4. Render the results in the table
+          renderTable(results);
+        } catch (error) {
+          console.error("Validation failed:", error);
+          resultsBody.innerHTML = `<tr><td colspan="7" style="color: red;">Error: ${error.message}</td></tr>`;
+        } finally {
+          // 5. Hide loader and re-enable button
+          loader.style.display = "none";
+          validationBtn.disabled = false;
+        }
+      });
+
+      // === OCR Button Logic ===
+      ocrBtn.addEventListener("click", async () => {
+        ocrBtn.disabled = true;
+        ocrResultsEl.textContent = "Extracting data from pamphlet...";
+
+        try {
+          // Call the GET /api/extract-image endpoint
+          const response = await fetch("/api/extract-image");
+          if (!response.ok) {
+            throw new Error(
+              `Error extracting image data: ${response.statusText}`
+            );
+          }
+
+          const data = await response.json();
+
+          // Display the raw JSON beautifully formatted
+          ocrResultsEl.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+          console.error("OCR failed:", error);
+          ocrResultsEl.textContent = `Error: ${error.message}`;
+        } finally {
+          ocrBtn.disabled = false;
+        }
+      });
+
+      // --- Helper function to build the table ---
+      function renderTable(data) {
+        // Clear the table
+        resultsBody.innerHTML = "";
+
+        if (data.length === 0) {
+          resultsBody.innerHTML =
+            '<tr><td colspan="7">No results found.</td></tr>';
+          return;
         }
 
-        async function runVLM() {
-            const vlmOut = document.getElementById('vlm-output');
-            vlmOut.innerText = "Extracting... please wait...";
-            const response = await fetch('/api/extract-image');
-            const data = await response.json();
-            vlmOut.innerText = JSON.stringify(data, null, 2);
-        }
+        // Loop over each row and append it
+        data.forEach((row) => {
+          const tr = document.createElement("tr");
 
-        async function loadData() {
-            const response = await fetch('/api/validation-results');
-            const data = await response.json();
-            const tableBody = document.getElementById('provider-body');
-            tableBody.innerHTML = ""; // Clear old data
+          // Add a class based on the status for styling
+          // We simplify the status name to make it a valid CSS class
+          const statusClass = `status-${String(row.status)
+            .split("(")[0]
+            .replace(/_/g, "-")}`;
+          tr.classList.add(statusClass);
 
-            if (data.error) {
-                tableBody.innerHTML = `<tr><td colspan="8">Error: ${data.error}</td></tr>`;
-                return;
-            }
-
-            for (const provider of data) {
-                const row = document.createElement('tr');
-                if (provider.status.includes('UPDATED')) row.className = 'status-UPDATED';
-                if (provider.status.includes('VERIFIED_OK')) row.className = 'status-VERIFIED_OK';
-                
-                row.innerHTML = `
-                    <td>${provider.provider_id}</td>
-                    <td>${provider.name}</td>
-                    <td>${provider.phone}</td>
-                    <td><strong>${provider.status}</strong></td>
-                    <td>${provider.confidence_score}%</td>
-                    <td>${provider.suggested_phone || 'N/A'}</td>
-                    <td>${provider.npi_phone || 'N/A'}</td>
-                    <td>${provider.google_phone || 'N/A'}</td>
+          tr.innerHTML = `
+                    <td>${row.name || "N/A"}</td>
+                    <td>${row.phone || "N/A"}</td>
+                    <td><strong>${row.status || "N/A"}</strong></td>
+                    <td>${row.suggested_phone || "N/A"}</td>
+                    <td>${row.npi_phone || "N/A"}</td>
+                    <td>${row.google_phone || "N/A"}</td>
+                    <td>${row.confidence_score || "N/A"}%</td>
                 `;
-                tableBody.appendChild(row);
-            }
-        }
-        // Load data when page opens
-        loadData();
+          resultsBody.appendChild(tr);
+        });
+      }
     </script>
-</body>
+  </body>
 </html>
