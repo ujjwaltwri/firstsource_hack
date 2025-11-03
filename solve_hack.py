@@ -4,12 +4,12 @@ import os
 from dotenv import load_dotenv
 import json
 from PIL import Image
+import cv2
+import numpy as np
+import pytesseract
+import re
 
-# --- PaddleOCR Imports ---
-# This is our new, 100% free VLM
-from paddleocr import PaddleOCR
-
-print("--- RUNNING solve_hack.py (Correct VLM / Correct NPI) ---")
+print("--- RUNNING solve_hack.py (HIGH ACCURACY Tesseract OCR) ---")
 
 # Load the .env file to get our API keys
 load_dotenv()
@@ -132,39 +132,217 @@ def run_full_validation():
     print(final_df)
 
 
-# --- AGENT 4: FREE VLM (CORRECT MODEL: PaddleOCR) ---
-print("Loading free PaddleOCR VLM model...")
-# This initializes the OCR model. lang='en' for English.
-ocr = PaddleOCR(use_textline_orientation=True, lang='en')
-print("Free PaddleOCR VLM model loaded successfully.")
+# --- AGENT 4: HIGH ACCURACY TESSERACT OCR ---
+print("Tesseract OCR ready for use.")
 
-def extract_data_from_image_free(image_path):
-    """Uses a 100% free PaddleOCR model to READ the image."""
-        
-    print(f"\n--- Starting FREE VLM (PaddleOCR) extraction for {image_path} ---")
+def enhance_image_for_ocr(image_path):
+    """Apply multiple preprocessing techniques for best OCR results."""
+    print("Enhancing image for OCR...")
+    
+    # Read image
+    img = cv2.imread(image_path)
+    
+    # Multiple preprocessing pipelines
+    processed_images = []
+    
+    # Method 1: Standard grayscale + threshold
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    thresh1 = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+    processed_images.append(("otsu_threshold", thresh1))
+    
+    # Method 2: Adaptive threshold
+    thresh2 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                     cv2.THRESH_BINARY, 31, 2)
+    processed_images.append(("adaptive_threshold", thresh2))
+    
+    # Method 3: Denoise + threshold
+    denoised = cv2.fastNlMeansDenoising(gray, None, 10, 7, 21)
+    thresh3 = cv2.threshold(denoised, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+    processed_images.append(("denoised_otsu", thresh3))
+    
+    # Method 4: Contrast enhancement + threshold
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    enhanced = clahe.apply(gray)
+    thresh4 = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+    processed_images.append(("clahe_otsu", thresh4))
+    
+    # Method 5: Morphological operations
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+    morph = cv2.morphologyEx(thresh1, cv2.MORPH_CLOSE, kernel)
+    processed_images.append(("morphological", morph))
+    
+    # Method 6: Bilateral filter + threshold
+    bilateral = cv2.bilateralFilter(gray, 9, 75, 75)
+    thresh5 = cv2.threshold(bilateral, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+    processed_images.append(("bilateral_otsu", thresh5))
+    
+    return processed_images
+
+def extract_data_from_image_tesseract(image_path):
+    """Uses Tesseract OCR with multiple preprocessing methods for highest accuracy."""
+    
+    print(f"\n{'='*80}")
+    print(f"STARTING HIGH-ACCURACY TESSERACT OCR: {image_path}")
+    print(f"{'='*80}\n")
     
     try:
-        # --- FIX #2: We are using PaddleOCR. It's built for this. ---
-        # It will return a list of all text blocks it finds.
-        result = ocr.ocr(image_path)
+        # Get multiple preprocessed versions
+        processed_images = enhance_image_for_ocr(image_path)
         
-        # We'll just extract the text parts for a clean list
-        extracted_text_list = []
-        if result and result[0]:
-            for line in result[0]:
-                extracted_text_list.append(line[1][0]) # line[1][0] is the text
-
+        all_results = []
+        
+        # Try OCR on original image first
+        print("▸ Running OCR on ORIGINAL image...")
+        original_img = Image.open(image_path)
+        
+        # Tesseract configuration for best accuracy
+        custom_config = r'--oem 3 --psm 6'  # OEM 3 = Default, PSM 6 = Uniform block of text
+        
+        original_text = pytesseract.image_to_string(original_img, config=custom_config)
+        all_results.append(("original", original_text, len(original_text.strip())))
+        print(f"  ✓ Extracted {len(original_text.strip())} characters")
+        
+        # Try OCR on each preprocessed version
+        for method_name, processed_img in processed_images:
+            print(f"▸ Running OCR on {method_name.upper()}...")
+            text = pytesseract.image_to_string(processed_img, config=custom_config)
+            char_count = len(text.strip())
+            all_results.append((method_name, text, char_count))
+            print(f"  ✓ Extracted {char_count} characters")
+        
+        # Select the result with the most extracted text
+        best_result = max(all_results, key=lambda x: x[2])
+        best_method, best_text, char_count = best_result
+        
+        print(f"\n✓ BEST METHOD: {best_method.upper()} ({char_count} characters)")
+        
+        # Parse the extracted text
+        parsed_info = parse_medical_pamphlet_advanced(best_text)
+        
+        # Get detailed text with confidence (using image_to_data)
+        detailed_data = pytesseract.image_to_data(
+            processed_images[0][1] if processed_images else original_img,
+            output_type=pytesseract.Output.DICT,
+            config=custom_config
+        )
+        
+        # Extract lines with confidence scores
+        lines_with_confidence = []
+        for i, text in enumerate(detailed_data['text']):
+            if text.strip():
+                lines_with_confidence.append({
+                    "text": text.strip(),
+                    "confidence": detailed_data['conf'][i]
+                })
+        
         final_result = {
-            "model_used": "PaddleOCR",
-            "extracted_lines": extracted_text_list
+            "model_used": "Tesseract OCR",
+            "best_preprocessing_method": best_method,
+            "total_characters_extracted": char_count,
+            "full_text": best_text,
+            "lines_with_confidence": lines_with_confidence,
+            "parsed_information": parsed_info,
+            "all_methods_tested": [m[0] for m in all_results]
         }
         
-        print("Free VLM (PaddleOCR) extraction complete.")
         return final_result
         
     except Exception as e:
-        print(f"Error during VLM processing: {e}")
+        print(f"✗ ERROR during OCR processing: {e}")
+        import traceback
+        traceback.print_exc()
         return {"error": str(e)}
+
+def parse_medical_pamphlet_advanced(text):
+    """Simplified parsing with better logic."""
+    info = {
+        "doctor_name": None,
+        "credentials": None,
+        "hospital_name": None,
+        "specialization": None,
+        "phone_numbers": [],
+        "email": None,
+        "website": None,
+        "conditions_treated": []
+    }
+    
+    lines = [l.strip() for l in text.split('\n') if l.strip()]
+    
+    # First pass: find key information with strict rules
+    for i, line in enumerate(lines):
+        line_upper = line.upper()
+        
+        # Doctor name: must start with DR and be short
+        if line_upper.startswith('DR.') or line_upper.startswith('DR '):
+            if len(line) < 30 and not info["doctor_name"]:
+                clean = re.sub(r'[|\\\/]', '', line)
+                clean = re.sub(r'\s+', ' ', clean).strip()
+                info["doctor_name"] = clean
+                # Next line might be credentials
+                if i + 1 < len(lines):
+                    next_line = lines[i + 1].upper()
+                    if any(x in next_line for x in ['D.L.O', 'DLO', 'M.D', 'MD', 'MBBS']):
+                        info["credentials"] = lines[i + 1].strip()
+        
+        # Hospital: must contain HOSPITAL and be reasonably short
+        if 'HOSPITAL' in line_upper and 5 < len(line) < 30:
+            if not info["hospital_name"]:
+                clean = re.sub(r'[^A-Za-z\s]', '', line)
+                clean = re.sub(r'\s+', ' ', clean).strip()
+                if clean:
+                    info["hospital_name"] = clean
+        
+        # Phone: strict pattern matching
+        phone_match = re.search(r'\b\d{5}[-\s]?\d{6}\b', line)
+        if phone_match:
+            clean_phone = "".join(filter(str.isdigit, phone_match.group()))
+            if clean_phone not in info["phone_numbers"]:
+                info["phone_numbers"].append(clean_phone)
+        
+        # Email: strict email pattern
+        email_match = re.search(r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b', line)
+        if email_match and not info["email"]:
+            info["email"] = email_match.group().lower()
+        
+        # Website: strict www pattern
+        website_match = re.search(r'www\.[a-zA-Z0-9.-]+\.(com|net|in|org)', line, re.IGNORECASE)
+        if website_match and not info["website"]:
+            info["website"] = website_match.group().lower()
+        
+        # Specialization: only lines with ENT/SURGEON/ENDOSCOPIC
+        if any(x in line_upper for x in ['ENDOSCOPIC', 'ENT,', 'SURGEON']):
+            if 'SPECIALIST IN' not in line_upper and not info["specialization"]:
+                clean = re.sub(r'[^A-Za-z\s,&]', '', line)
+                clean = re.sub(r'\s+', ' ', clean).strip()
+                if 10 < len(clean) < 60:
+                    info["specialization"] = clean
+    
+    # Second pass: extract conditions (only lines with medical terms)
+    medical_terms = {
+        'EAR', 'THROAT', 'TONSIL', 'ALLERG', 'NOSE', 
+        'SNEEZ', 'SNOR', 'HEARING', 'VERTIGO', 'REFLUX', 
+        'FOREIGN', 'THYROID', 'PAIN', 'INFECTION'
+    }
+    
+    for line in lines:
+        line_upper = line.upper()
+        
+        # Must contain a medical term
+        if any(term in line_upper for term in medical_terms):
+            # Skip if it's metadata
+            if any(skip in line_upper for skip in ['SPECIALIST IN', 'CONTACT', 'CALL', 'DR.']):
+                continue
+            
+            # Clean the line
+            clean = re.sub(r'^[^A-Z]+', '', line)  # Remove leading junk
+            clean = re.sub(r'[^A-Za-z\s&]', '', clean)  # Keep only letters and &
+            clean = re.sub(r'\s+', ' ', clean).strip()  # Normalize spaces
+            
+            # Add if it's reasonable
+            if 5 < len(clean) < 50 and clean not in info["conditions_treated"]:
+                info["conditions_treated"].append(clean)
+    
+    return info
 
 # --- This is the main script that runs ---
 if __name__ == "__main__":
@@ -172,7 +350,33 @@ if __name__ == "__main__":
     # --- PART 1: NPI + Google Maps Validation ---
     run_full_validation()
     
-    # --- PART 2: VLM EXTRACTION ---
-    vlm_data = extract_data_from_image_free('pamplet 4.jpeg')
-    print("\nExtracted VLM Data (100% Free OCR):")
-    print(vlm_data)
+    # --- PART 2: HIGH-ACCURACY TESSERACT OCR EXTRACTION ---
+    vlm_data = extract_data_from_image_tesseract('pamplet 4.jpeg')
+    
+    print("\n" + "="*80)
+    print("FULL EXTRACTED TEXT")
+    print("="*80)
+    if "full_text" in vlm_data:
+        print(vlm_data["full_text"])
+    
+    print("\n" + "="*80)
+    print("PARSED MEDICAL INFORMATION")
+    print("="*80)
+    if "parsed_information" in vlm_data:
+        parsed = vlm_data["parsed_information"]
+        for key, value in parsed.items():
+            if value:
+                if isinstance(value, list) and value:
+                    print(f"\n{key.replace('_', ' ').title()}:")
+                    for item in value:
+                        print(f"  • {item}")
+                else:
+                    print(f"{key.replace('_', ' ').title()}: {value}")
+    
+    # Save detailed results
+    print("\n" + "="*80)
+    print("SAVING DETAILED RESULTS")
+    print("="*80)
+    with open('ocr_results.json', 'w') as f:
+        json.dump(vlm_data, f, indent=2)
+    print("✓ Detailed OCR results saved to 'ocr_results.json'")
