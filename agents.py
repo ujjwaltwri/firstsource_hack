@@ -39,10 +39,26 @@ def get_npi_data(npi_number):
                 # Format the address for comparison
                 full_address = f"{practice_address.get('address_1', '')}, {practice_address.get('city', '')}, {practice_address.get('state', '')}"
                 
+                # --- THIS IS THE FIX ---
+                # Check for Individual (Type 1) vs. Organization (Type 2)
+                
+                basic_info = provider.get('basic', {})
+                npi_name = ""
+                
+                if basic_info.get('first_name'):
+                    # It's an Individual
+                    npi_name = f"{basic_info.get('first_name', '')} {basic_info.get('last_name', '')}"
+                elif basic_info.get('organization_name'):
+                    # It's an Organization
+                    npi_name = basic_info.get('organization_name')
+                else:
+                    npi_name = "Name Not Found"
+                # --- END OF FIX ---
+
                 return {
                     "npi_phone": clean_phone[:10], # Get standard 10-digit phone
                     "npi_address": full_address,
-                    "npi_name": f"{provider['basic']['first_name']} {provider['basic']['last_name']}"
+                    "npi_name": npi_name.strip() # Use the new robust name
                 }
 
         # If no results or no address

@@ -2,9 +2,123 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Provider Dashboard</title>
+    <title>Provider Directory Dashboard</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        table { border-collapse: collapse; width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        
+        /* --- Status Styling --- */
+        .status-VERIFIED_OK { background-color: #d4edda; color: #155724; }
+        .status-NEEDS_MANUAL_REVIEW { background-color: #f8d7da; color: #721c24; }
+        .status-ERROR_NPI_FETCH { background-color: #fff3cd; color: #856404; }
+
+        button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover { background-color: #0056b3; }
+        
+        /* Modal for Email */
+        .modal {
+            display: none; position: fixed; z-index: 1; left: 0; top: 0;
+            width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe; margin: 15% auto; padding: 20px;
+            border: 1px solid #888; width: 60%; white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
 </head>
 <body>
+
     <h1>Provider Validation Dashboard</h1>
+    <p>Live data from <code>validation_results.csv</code></p>
+
+    <table id="provider-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Input Phone</th>
+                <th>Status</th>
+                <th>NPI Phone</th>
+                <th>Confidence</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="provider-body">
+            </tbody>
+    </table>
+
+    <div id="emailModal" class="modal">
+      <div class="modal-content">
+        <span class="close" style="float:right; cursor:pointer;" onclick="closeModal()">&times;</span>
+        <pre id="email-body"></pre>
+      </div>
+    </div>
+
+    <script>
+        // --- Fetch data from our API and build the table ---
+        async function loadData() {
+            const response = await fetch('/api/validation-results');
+            const data = await response.json();
+            const tableBody = document.getElementById('provider-body');
+
+            if (data.error) {
+                tableBody.innerHTML = `<tr><td colspan="7">Error: ${data.error}</td></tr>`;
+                return;
+            }
+
+            for (const provider of data) {
+                const row = document.createElement('tr');
+                // Add the CSS class based on the status
+                row.className = `status-${provider.status}`;
+                
+                row.innerHTML = `
+                    <td>${provider.provider_id}</td>
+                    <td>${provider.name}</td>
+                    <td>${provider.phone}</td>
+                    <td><strong>${provider.status}</strong></td>
+                    <td>${provider.npi_phone || 'N/A'}</td>
+                    <td>${provider.confidence_score}%</td>
+                    <td>
+                        <button onclick="generateEmail(${provider.provider_id})">Email</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            }
+        }
+
+        // --- Call our email API and show the result in a modal ---
+        async function generateEmail(id) {
+            const response = await fetch(`/api/generate-email/${id}`);
+            const data = await response.json();
+            
+            const modal = document.getElementById('emailModal');
+            const emailBody = document.getElementById('email-body');
+            
+            if (data.error) {
+                emailBody.innerText = `Error: ${data.error}`;
+            } else {
+                emailBody.innerText = data.email_generated;
+            }
+            modal.style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById('emailModal').style.display = "none";
+        }
+
+        // --- Run on page load ---
+        loadData();
+    </script>
 </body>
 </html>
