@@ -1,0 +1,180 @@
+/* ====== Cards & panels ====== */
+.vs-card {
+  background: #ffffff;
+  border-radius: 0.5rem;          /* rounded-lg */
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
+  border: 1px solid #e5e7eb;      /* gray-200 */
+}
+
+/* ====== Buttons ====== */
+.btn-primary {
+  padding: 0.5rem 1rem;           /* px-4 py-2 */
+  background: #2563eb;            /* blue-600 */
+  color: #ffffff;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: .875rem;             /* text-sm */
+  font-weight: 500;
+  cursor: pointer;
+}
+.btn-primary:hover { background: #1d4ed8; } /* blue-700 */
+.btn-primary:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;            /* gray-100 */
+  color: #374151;                 /* gray-700 */
+  border: none;
+  border-radius: 0.5rem;
+  font-size: .875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.btn-secondary:hover { background: #e5e7eb; } /* gray-200 */
+
+/* ====== Status chip ====== */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;     /* py-0.5 px-2.5 */
+  border-radius: 9999px;
+  font-size: .75rem;              /* text-xs */
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
+}
+
+/* ====== Modal transitions (optional use by adding these classes) ====== */
+.vs-backdrop-enter { opacity: 0; }
+.vs-backdrop-enter-active { opacity: 1; transition: opacity .2s ease; }
+.vs-backdrop-exit { opacity: 1; }
+.vs-backdrop-exit-active { opacity: 0; transition: opacity .2s ease; }
+
+.vs-modal-enter { transform: translateY(8px) scale(.98); opacity: 0; }
+.vs-modal-enter-active { transform: translateY(0) scale(1); opacity: 1; transition: transform .2s ease, opacity .2s ease; }
+.vs-modal-exit { transform: translateY(0) scale(1); opacity: 1; }
+.vs-modal-exit-active { transform: translateY(8px) scale(.98); opacity: 0; transition: transform .2s ease, opacity .2s ease; }
+
+/* ====== Drag-and-drop upload area ====== */
+.vs-dropzone {
+  border: 2px dashed #d1d5db;     /* gray-300 */
+  border-radius: 0.5rem;
+  padding: 3rem;                  /* p-12 */
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s ease, background-color .2s ease;
+}
+.vs-dropzone:hover {
+  border-color: #7c3aed;          /* purple-600-ish */
+  background-color: rgba(147, 51, 234, 0.06); /* subtle purple */
+}
+.vs-dropzone input[type="file"] { display: none; }
+
+/* ====== Range slider (Min Confidence) ====== */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  background: transparent;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  background: #d1d5db;            /* gray-300 */
+  border-radius: 9999px;
+}
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: #d1d5db;
+  border-radius: 9999px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid rgb(79, 70, 229); /* indigo-600 */
+  margin-top: -6px; /* center the thumb on the track */
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid rgb(79, 70, 229);
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+}
+
+/* ====== Table polish ====== */
+table thead th {
+  text-align: left;
+  font-size: .75rem;              /* text-xs */
+  font-weight: 600;
+  letter-spacing: .05em;          /* tracking-wider */
+  text-transform: uppercase;
+  color: #4b5563;                 /* gray-600 */
+  background: #f9fafb;            /* gray-50 */
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.75rem 1rem;          /* py-3 px-4 */
+}
+table tbody td {
+  vertical-align: middle;
+  padding: 0.75rem 1rem;
+  color: #374151;                 /* gray-700 */
+  border-bottom: 1px solid #e5e7eb;
+}
+tr:hover td { background: #f9fafb; } /* gray-50 */
+
+/* ====== Progress bars inside distribution blocks ====== */
+.vs-progress {
+  background: linear-gradient(90deg, #3b82f6, #2563eb); /* blue-500 → blue-600 */
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.5rem;
+  color: #ffffff;
+  font-size: .75rem;
+  font-weight: 500;
+  transition: width .5s ease;
+}
+
+/* ====== Badges ====== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  padding: 0.125rem 0.5rem;
+  font-size: .75rem;
+  font-weight: 500;
+}
+
+/* ====== Focusable tiles ====== */
+.tile {
+  border-radius: 0.5rem;
+}
+.tile:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 0 0 4px #3b82f6;
+}
+
+/* ====== Icon buttons: prevent text selection ====== */
+.icon-btn {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ====== Helper animation ====== */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .9; transform: scale(0.995); }
+}
+.pulse-subtle { animation: pulse-subtle 2s ease-in-out infinite; }

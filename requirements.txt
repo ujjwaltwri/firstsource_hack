@@ -23,4 +23,4 @@ pytesseract
 
 # --- System dependency (not a pip package) ---
 # On macOS: brew install tesseract
-# On Ubuntu/Debian: sudo apt-get install tesseract-ocr
+python-multipart

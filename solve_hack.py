@@ -164,6 +164,7 @@ def validate_provider_row(row):
     google_data = get_google_maps_data(row.get('name', ''), row.get('address', ''))
     google_phone = google_data.get('google_phone') if google_data else None
 
+    # ----- Status / confidence logic (unchanged from yours) -----
     if google_phone and input_phone_clean == google_phone:
         if npi_phone == google_phone or registration_valid:
             status = f"VERIFIED_OK (Google + {registry_source})"
@@ -195,14 +196,19 @@ def validate_provider_row(row):
         confidence = 30
         suggested = None
 
+    # ----- NEW: source agreement count (no new deps) -----
+    sources = [p for p in [input_phone_clean or None, google_phone, npi_phone] if p]
+    source_agreement_count = max((sources.count(ph) for ph in set(sources)), default=0)
+
     return {
         "status": status,
-        "confidence_score": confidence,
+        "confidence_score": int(confidence),
         "suggested_phone": suggested,
         "npi_phone": npi_phone if has_npi else None,
-        "registration_valid": registration_valid if has_indian_reg else None,
+        "registration_valid": bool(registration_valid) if has_indian_reg else None,
         "google_phone": google_phone,
-        "registry_source": registry_source
+        "registry_source": registry_source,
+        "source_agreement_count": int(source_agreement_count),
     }
 
 # --- AGENT 4: HIGH ACCURACY TESSERACT OCR ---
@@ -440,13 +446,14 @@ def extract_data_from_image_tesseract(image_path):
         return {"error": str(e)}
 
 # --- ORCHESTRATOR ---
-def run_full_validation():
-    """Runs the entire cross-referencing pipeline."""
+def run_full_validation(input_csv: str = 'input_providers.csv',
+                        output_csv: str = 'validation_results.csv'):
+    """Runs the entire cross-referencing pipeline and returns a summary dict."""
     try:
-        df = pd.read_csv('input_providers.csv')
+        df = pd.read_csv(input_csv)
     except FileNotFoundError:
-        print("Error: input_providers.csv not found!")
-        return
+        print(f"Error: {input_csv} not found!")
+        return {"error": f"{input_csv} not found"}
 
     print(f"Running validation on {len(df)} providers...")
     print("Multi-Regional Validation System:")
@@ -459,7 +466,7 @@ def run_full_validation():
     if 'expected_error_type' in final_df.columns:
         final_df = final_df.drop('expected_error_type', axis=1)
 
-    final_df.to_csv('validation_results.csv', index=False)
+    final_df.to_csv(output_csv, index=False)
 
     print("="*80)
     print("VALIDATION COMPLETE!")
@@ -469,25 +476,35 @@ def run_full_validation():
     verified = len(final_df[final_df['status'].str.contains('VERIFIED', na=False)])
     needs_update = len(final_df[final_df['status'].str.contains('UPDATE', na=False)])
     needs_review = len(final_df[final_df['status'].str.contains('REVIEW', na=False)])
-    avg_confidence = final_df['confidence_score'].mean()
+    avg_confidence = float(final_df['confidence_score'].mean()) if total else 0.0
 
     print(f"\nValidation Summary:")
     print(f"  Total Providers: {total}")
-    print(f"  Verified: {verified} ({verified/total*100:.1f}%)")
-    print(f"  Needs Update: {needs_update} ({needs_update/total*100:.1f}%)")
-    print(f"  Needs Review: {needs_review} ({needs_review/total*100:.1f}%)")
+    print(f"  Verified: {verified} ({(verified/total*100 if total else 0):.1f}%)")
+    print(f"  Needs Update: {needs_update} ({(needs_update/total*100 if total else 0):.1f}%)")
+    print(f"  Needs Review: {needs_review} ({(needs_review/total*100 if total else 0):.1f}%)")
     print(f"  Average Confidence: {avg_confidence:.1f}%")
 
-    print(f"\nResults saved to: validation_results.csv")
+    print(f"\nResults saved to: {output_csv}")
     print(f"\nTop 10 Results:")
     display_cols = [c for c in ['provider_id', 'name', 'status', 'confidence_score'] if c in final_df.columns]
     print(final_df[display_cols].head(10).to_string(index=False))
+
+    # >>> return a summary for the API/UI
+    return {
+        "total": int(total),
+        "verified": int(verified),
+        "needs_update": int(needs_update),
+        "needs_review": int(needs_review),
+        "avg_confidence": round(avg_confidence, 1),
+        "output_file": output_csv
+    }
 
 # --- MAIN EXECUTION ---
 if __name__ == "__main__":
 
     # PART 1: Provider Validation
-    run_full_validation()
+    run_full_validation()  # prints + writes CSV + returns summary (ignored here)
 
     # PART 2: OCR EXTRACTION (Optional)
     image_extensions = ['.jpg', '.jpeg', '.png', '.avif', '.webp']

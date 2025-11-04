@@ -14,8 +14,7 @@ from solve_hack import extract_data_from_image_tesseract  # ensure solve_hack.py
 
 # Page configuration
 st.set_page_config(
-    page_title="AI Provider Validation System",
-    page_icon="🏥",
+    page_title="VaidyaSetu",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -24,7 +23,7 @@ st.set_page_config(
 st.markdown("""
 <style>
 /* (same CSS you had) */
-.main-header { font-size: 2.8rem; font-weight: 700; color: #1e293b; text-align: center; padding: 2rem 0 1rem 0; letter-spacing: -0.5px; }
+.main-header { font-size: 2.8rem; font-weight: 700; color: #ffffff; text-align: center; padding: 2rem 0 1rem 0; letter-spacing: -0.5px; }
 .subtitle { text-align: center; color: #64748b; font-size: 1.1rem; margin-top: -15px; margin-bottom: 2rem; font-weight: 400; }
 .metric-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
 .metric-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
@@ -38,7 +37,7 @@ st.markdown("""
 .stTabs [data-baseweb="tab"] { padding: 12px 24px; background-color: white; border-radius: 6px; font-weight: 600; color: #475569; border: 1px solid #e2e8f0; }
 .stTabs [data-baseweb="tab"][aria-selected="true"] { background-color: #3b82f6; color: white; border-color: #3b82f6; }
 .css-1d391kg { background-color: #f8fafc; }
-.section-header { font-size: 1.5rem; font-weight: 600; color: #1e293b; margin-bottom: 1rem; border-left: 4px solid #3b82f6; padding-left: 1rem; }
+.section-header { font-size: 1.5rem; font-weight: 600; color: #ffffff; margin-bottom: 1rem; border-left: 4px solid #3b82f6; padding-left: 1rem; }
 .dataframe { font-size: 0.9rem; }
 .ocr-container { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 12px; color: white; margin-bottom: 2rem; }
 .ocr-result { background: white; padding: 1.5rem; border-radius: 8px; color: #1e293b; margin-top: 1rem; }
@@ -51,7 +50,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Title
-st.markdown('<div class="main-header">AI-Powered Provider Validation System</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">VaidyaSetu</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Automated Healthcare Directory Management | Multi-Agent AI Technology</div>', unsafe_allow_html=True)
 st.divider()
 
@@ -839,7 +838,7 @@ Provider Directory Management Team
 st.divider()
 footer_col1, footer_col2, footer_col3 = st.columns(3)
 with footer_col1:
-    st.markdown("**AI Provider Validation System**")
+    st.markdown("**VaidyaSetu**")
     st.caption("Firstsource Hackathon 2024")
 with footer_col2:
     st.markdown("**Technology Stack**")
