@@ -6,7 +6,8 @@ Provider Validation & OCR pipeline for Firstsource hackathon.
 - Tesseract OCR (multiple preprocessing pipelines)
 - Change log generation and PII-safe logs
 """
-
+import uuid
+from supabase_client import get_supabase
 import os
 import time
 import json
@@ -514,7 +515,18 @@ def run_full_validation(input_csv: str = "input_providers.csv", output_csv: str 
         "output_file": output_csv,
         "elapsed_seconds": elapsed
     }
-
+    try:
+        run_id = push_results_to_supabase(final_df, {
+            "total": total,
+            "verified": verified,
+            "needs_update": needs_update,
+            "needs_review": needs_review,
+            "avg_confidence": avg_confidence,
+            "output_file": output_csv
+        })
+        logging.info(f"Pushed results to Supabase, run_id={run_id}")
+    except Exception as e:
+        logging.warning(f"Supabase push skipped/failed: {e}")
 # ----------------------
 # CLI entry
 # ----------------------
@@ -522,3 +534,41 @@ if __name__ == "__main__":
     logging.info("Running solve_hack pipeline in CLI mode")
     summary = run_full_validation()
     logging.info(f"Summary: {summary}")
+def push_results_to_supabase(final_df: pd.DataFrame, summary: dict) -> str:
+    """
+    Inserts one row into validation_runs and upserts all per-provider rows into validation_results.
+    Returns run_id (str).
+    """
+    sb = get_supabase()
+    run_id = str(uuid.uuid4())
+    sb.table("validation_runs").insert({
+        "run_id": run_id,
+        "total": summary.get("total", 0),
+        "verified": summary.get("verified", 0),
+        "needs_update": summary.get("needs_update", 0),
+        "needs_review": summary.get("needs_review", 0),
+        "avg_confidence": summary.get("avg_confidence", 0.0),
+        "output_file": summary.get("output_file", "")
+    }).execute()
+    cols = [
+        "provider_id","name","phone","address","city","country","specialization",
+        "npi_number","registration_number","status","confidence_score","suggested_phone",
+        "npi_phone","registration_valid","google_phone","registry_source","source_agreement_count"
+    ]
+    payload_cols = [c for c in cols if c in final_df.columns]
+    records = final_df[payload_cols].copy()
+    records.insert(0, "run_id", run_id)
+
+    # Convert NaN to None
+    records = records.where(pd.notna(records), None)
+
+    batch = []
+    for rec in records.to_dict(orient="records"):
+        batch.append(rec)
+        if len(batch) >= 500:  # chunk
+            sb.table("validation_results").upsert(batch).execute()
+            batch = []
+    if batch:
+        sb.table("validation_results").upsert(batch).execute()
+
+    return run_id
