@@ -1,8 +1,26 @@
+# Web/API
 fastapi
 uvicorn[standard]
 requests
-pandas
 openai
-python-dotenv
 google-generativeai
+
+# App/UI
+streamlit
+plotly
+
+# Data & utils
+pandas
+numpy
+python-dotenv
+openpyxl  # for Excel export via pandas.ExcelWriter
+
+# Images & OCR
 pillow
+pillow-avif-plugin
+opencv-python
+pytesseract
+
+# --- System dependency (not a pip package) ---
+# On macOS: brew install tesseract
+# On Ubuntu/Debian: sudo apt-get install tesseract-ocr
