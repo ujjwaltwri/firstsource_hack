@@ -570,10 +570,10 @@ const App = () => {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">VaidyaSetu</h1>
-              <p className="text-xs text-gray-500">Automated Healthcare Directory Management</p>
+              <h1 className="text-4xl font-bold text-gray-950">VaidyaSetu</h1>
+              <p className="text-sm text-gray-500">Automated Healthcare Directory Management</p>
             </div>
             <div className="flex items-center gap-3">
               <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
@@ -741,7 +741,7 @@ const App = () => {
             {/* Tabs */}
             {/* SPACING TUNE: add inner padding + larger bottom margin so cards don’t crowd */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
-              <div className="flex items-center gap-2 px-2 sm:px-4 py-2 sm:py-3 border-b border-gray-200 overflow-x-auto">{/* SPACING TUNE */}
+              <div className="flex gap-2 px-2 sm:px-4 border-b border-gray-200 overflow-x-auto [&>*]:py-3 [&>*]:border-b-2 [&>*]:border-transparent">{/* SPACING TUNE */}
                 <TabButton icon={BarChart3} label="Dashboard" active={activeTab === "dashboard"} onClick={() => setActiveTab("dashboard")} />
                 <TabButton icon={Users} label="Validation Results" active={activeTab === "validation"} onClick={() => setActiveTab("validation")} />
                 <TabButton icon={Search} label="Provider Search" active={activeTab === "search"} onClick={() => setActiveTab("search")} />
