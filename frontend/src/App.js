@@ -38,24 +38,6 @@ async function triggerBackendValidation() {
   return res.json(); // returns summary
 }
 
-/* ---------- ADD: backend summary + communications endpoints ---------- */
-async function fetchSummary() {
-  const res = await fetch(`${API_BASE}/results/summary`);
-  if (!res.ok) throw new Error(`Failed to fetch summary: ${res.status}`);
-  return res.json(); // { total, verified, needs_update, needs_review, avg_confidence }
-}
-async function generateCommunications() {
-  const res = await fetch(`${API_BASE}/communications/generate`, { method: "POST" });
-  if (!res.ok) throw new Error(`Generate communications failed: ${res.status}`);
-  return res.json(); // { emails_count, emails_csv, emails_dir, report_path, generated_at }
-}
-function downloadEmailsCsv() {
-  window.open(`${API_BASE}/communications/emails-csv`, "_blank");
-}
-function downloadSummaryReport() {
-  window.open(`${API_BASE}/communications/report`, "_blank");
-}
-
 /* ---------- Mock data (used until CSV is uploaded) ---------- */
 const generateMockData = () => {
   const statuses = [
@@ -101,12 +83,6 @@ const App = () => {
   const [searchStatus, setSearchStatus] = useState("");
   const [searchSpec, setSearchSpec] = useState("");
 
-  /* ---------- ADD: backend summary + communications UI state ---------- */
-  const [backendSummary, setBackendSummary] = useState(null);
-  const [commsSummary, setCommsSummary] = useState(null);
-  const [commsLoading, setCommsLoading] = useState(false);
-  const [commsError, setCommsError] = useState("");
-
   // filtering for Validation Results & Dashboard
   const filteredProviders = useMemo(() => {
     return providers.filter(
@@ -119,7 +95,7 @@ const App = () => {
     );
   }, [providers, minConfidence, searchQuery]);
 
-  // stats (client-side fallback)
+  // stats
   const stats = useMemo(() => {
     const total = filteredProviders.length;
     const verified = filteredProviders.filter((p) => (p.confidence_score ?? 0) >= 80).length;
@@ -159,88 +135,79 @@ const App = () => {
   };
 
   /* ---------------- Tabs ---------------- */
-  const renderDashboard = () => {
-    // Prefer backend KPIs when available; otherwise fall back to client-side stats
-    const dash = backendSummary || {
-      total: stats.total,
-      verified: stats.verified,
-      needs_update: stats.needsUpdate,
-      needs_review: stats.needsReview,
-      avg_confidence: stats.avgConfidence,
-    };
+  const renderDashboard = () => (
+    // SPACING TUNE: larger vertical spacing in dashboard sections
+    <div className="space-y-8">
+      {/* Stats Grid */}
+      {/* SPACING TUNE: bigger gap between cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <StatCard icon={Users} label="Total Providers" value={stats.total.toLocaleString()} color="bg-gradient-to-br from-blue-500 to-blue-600" />
+        <StatCard icon={CheckCircle} label="High Confidence" value={stats.verified.toLocaleString()} subtitle={`${((stats.verified/(stats.total||1))*100).toFixed(1)}%`} color="bg-gradient-to-br from-green-500 to-green-600" />
+        <StatCard icon={AlertTriangle} label="Needs Update" value={stats.needsUpdate.toLocaleString()} subtitle={`${((stats.needsUpdate/(stats.total||1))*100).toFixed(1)}%`} color="bg-gradient-to-br from-amber-500 to-amber-600" />
+        <StatCard icon={Clock} label="Manual Review" value={stats.needsReview.toLocaleString()} subtitle={`${((stats.needsReview/(stats.total||1))*100).toFixed(1)}%`} color="bg-gradient-to-br from-red-500 to-red-600" />
+        <StatCard icon={TrendingUp} label="Avg Confidence" value={`${stats.avgConfidence.toFixed(1)}%`} color="bg-gradient-to-br from-purple-500 to-purple-600" />
+      </div>
 
-    return (
-      <div className="space-y-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <StatCard icon={Users} label="Total Providers" value={(dash.total ?? 0).toLocaleString()} color="bg-gradient-to-br from-blue-500 to-blue-600" />
-          <StatCard icon={CheckCircle} label="High Confidence" value={(dash.verified ?? 0).toLocaleString()} subtitle={`${(((dash.verified ?? 0)/(dash.total || 1))*100).toFixed(1)}%`} color="bg-gradient-to-br from-green-500 to-green-600" />
-          <StatCard icon={AlertTriangle} label="Needs Update" value={(dash.needs_update ?? stats.needsUpdate).toLocaleString()} subtitle={`${((((dash.needs_update ?? stats.needsUpdate)/(dash.total || 1))*100).toFixed(1))}%`} color="bg-gradient-to-br from-amber-500 to-amber-600" />
-          <StatCard icon={Clock} label="Manual Review" value={(dash.needs_review ?? stats.needsReview).toLocaleString()} subtitle={`${((((dash.needs_review ?? stats.needsReview)/(dash.total || 1))*100).toFixed(1))}%`} color="bg-gradient-to-br from-red-500 to-red-600" />
-          <StatCard icon={TrendingUp} label="Avg Confidence" value={`${(dash.avg_confidence ?? stats.avgConfidence).toFixed(1)}%`} color="bg-gradient-to-br from-purple-500 to-purple-600" />
+      {/* ROI Metrics */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">ROI & Business Impact</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">{/* SPACING TUNE */ }
+          <MetricBox label="Time Saved" value="240 hrs" change="+95% reduction" positive />
+          <MetricBox label="Cost Savings" value="$6,000" change="vs manual validation" />
+          <MetricBox label="Speed Improvement" value="144x" change="automated processing" positive />
+          <MetricBox label="Accuracy Rate" value="95.2%" change="validation accuracy" positive />
         </div>
+      </div>
 
-        {/* ROI Metrics */}
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">ROI & Business Impact</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <MetricBox label="Time Saved" value="240 hrs" change="+95% reduction" positive />
-            <MetricBox label="Cost Savings" value="$6,000" change="vs manual validation" />
-            <MetricBox label="Speed Improvement" value="144x" change="automated processing" positive />
-            <MetricBox label="Accuracy Rate" value="95.2%" change="validation accuracy" positive />
-          </div>
-        </div>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Confidence Distribution</h3>
-            <div className="space-y-3">
-              {Object.entries(confidenceDistribution).map(([range, count]) => (
-                <div key={range} className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-gray-600 w-20">{range}%</span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-8 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-blue-500 to-blue-800 h-full flex items-center justify-end pr-2 text-black text-xs font-medium transition-all duration-500"
-                      style={{ width: `${(stats.total ? (count / stats.total) * 100 : 0)}%` }}
-                    >
-                      {count > 0 && count}
-                    </div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Confidence Distribution</h3>
+          <div className="space-y-3">
+            {Object.entries(confidenceDistribution).map(([range, count]) => (
+              <div key={range} className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-600 w-20">{range}%</span>
+                <div className="flex-1 bg-gray-100 rounded-full h-8 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-full flex items-center justify-end pr-2 text-white text-xs font-medium transition-all duration-500"
+                    style={{ width: `${(stats.total ? (count / stats.total) * 100 : 0)}%` }}
+                  >
+                    {count > 0 && count}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
+        </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Top Cities by Provider Count</h3>
-            <div className="space-y-3">
-              {Object.entries(
-                filteredProviders.reduce((acc, p) => {
-                  acc[p.city] = (acc[p.city] || 0) + 1;
-                  return acc;
-                }, {})
-              )
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 6)
-                .map(([city, count]) => (
-                  <div key={city} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-700">{city}</span>
-                    </div>
-                    <span className="text-sm font-semibold text-gray-900">{count} providers</span>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Top Cities by Provider Count</h3>
+          <div className="space-y-3">
+            {Object.entries(
+              filteredProviders.reduce((acc, p) => {
+                acc[p.city] = (acc[p.city] || 0) + 1;
+                return acc;
+              }, {})
+            )
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 6)
+              .map(([city, count]) => (
+                <div key={city} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm font-medium text-gray-700">{city}</span>
                   </div>
-                ))}
-            </div>
+                  <span className="text-sm font-semibold text-gray-900">{count} providers</span>
+                </div>
+              ))}
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
 
   const renderValidationResults = () => (
-    <div className="space-y-6">
+    <div className="space-y-6">{/* SPACING TUNE: consistent section spacing */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
         <span className="text-sm text-blue-800">
           Displaying <strong>{filteredProviders.length.toLocaleString()}</strong> of{" "}
@@ -249,6 +216,7 @@ const App = () => {
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
           onClick={() => {
+            // quick CSV export of current filtered rows
             const cols = ["provider_id","name","phone","city","status","confidence_score"];
             const rows = filteredProviders.map((p) => cols.map((c) => `"${(p[c] ?? "").toString().replace(/"/g, '""')}"`).join(","));
             const csv = [cols.join(","), ...rows].join("\n");
@@ -315,6 +283,7 @@ const App = () => {
             </tbody>
           </table>
         </div>
+        {/* Footer showing counts */}
         <div className="px-5 py-3 text-xs text-gray-500 border-t border-gray-200">
           Showing {Math.min(50, filteredProviders.length)} of {filteredProviders.length.toLocaleString()} (total {providers.length.toLocaleString()})
         </div>
@@ -323,7 +292,7 @@ const App = () => {
   );
 
   const renderOCR = () => (
-    <div className="space-y-8">
+    <div className="space-y-8">{/* SPACING TUNE */}
       <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-8 text-white">
         <h3 className="text-2xl font-bold mb-2">OCR Document Processing</h3>
         <p className="text-purple-100">
@@ -333,6 +302,7 @@ const App = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          {/* Make the whole area clickable using <label> */}
           <label className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-purple-500 transition-colors cursor-pointer vs-dropzone">
             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-sm font-medium text-gray-700 mb-1">Click to upload or drag and drop</p>
@@ -350,7 +320,7 @@ const App = () => {
 
           {ocrFile && (
             <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center justify-between gap-3">{/* SPACING TUNE */}
                 <div className="flex items-center gap-3">
                   <FileText className="w-5 h-5 text-green-600" />
                   <span className="text-sm font-medium text-green-900">{ocrFile.name}</span>
@@ -363,7 +333,7 @@ const App = () => {
                     setErrorMsg("");
                     try {
                       const result = await processOcr(ocrFile);
-                      setOcrResult(result);
+                      setOcrResult(result); // show panel
                     } catch (err) {
                       console.error(err);
                       setErrorMsg(err.message || "OCR failed");
@@ -378,6 +348,7 @@ const App = () => {
             </div>
           )}
 
+          {/* OCR Result panel */}
           {ocrResult && (
             <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
               <h4 className="font-semibold text-gray-800 mb-3">
@@ -444,6 +415,7 @@ const App = () => {
 
   // Provider Search tab
   const renderProviderSearch = () => {
+    // Build source lists from current data
     const cities = Array.from(new Set(providers.map(p => p.city).filter(Boolean))).sort();
     const statuses = Array.from(new Set(providers.map(p => p.status).filter(Boolean))).sort();
     const specs = Array.from(new Set(providers.map(p => p.specialization).filter(Boolean))).sort();
@@ -462,7 +434,8 @@ const App = () => {
     });
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-6">{/* SPACING TUNE */}
+        {/* Filters row */}
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
@@ -502,6 +475,7 @@ const App = () => {
           </div>
         </div>
 
+        {/* Results */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -555,11 +529,11 @@ const App = () => {
   };
 
   const renderAnalytics = () => (
-    <div className="space-y-8">
+    <div className="space-y-8">{/* SPACING TUNE */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">System Performance</h3>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-6">{/* SPACING TUNE */}
             <Tile label="Providers/Hour" value="500+" scheme="blue" />
             <Tile label="Accuracy Rate" value="95.2%" scheme="green" />
             <Tile label="Cost/Provider" value="$0.05" scheme="purple" />
@@ -583,6 +557,7 @@ const App = () => {
   /* ---------------- Render ---------------- */
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* tiny CSS for chips so status looks right without Tailwind */}
       <style>{`
         .chip{display:inline-flex;align-items:center;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:600;border:1px solid}
         .chip--ok{color:#166534;background:#ecfdf5;border-color:#bbf7d0}
@@ -607,6 +582,7 @@ const App = () => {
               <button
                 className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                 onClick={() => {
+                  // simple refresh: reload sample
                   setProviders(generateMockData());
                 }}
               >
@@ -631,9 +607,7 @@ const App = () => {
                 </div>
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-xs text-gray-500">Avg Confidence</div>
-                  <div className="text-lg font-bold text-gray-900">
-                    {(backendSummary?.avg_confidence ?? stats.avgConfidence).toFixed(1)}%
-                  </div>
+                  <div className="text-lg font-bold text-gray-900">{stats.avgConfidence.toFixed(1)}%</div>
                 </div>
               </div>
 
@@ -712,8 +686,6 @@ const App = () => {
                       await triggerBackendValidation();
                       const data = await fetchBackendResults();
                       setProviders(data.rows || []);
-                      const sum = await fetchSummary();
-                      setBackendSummary(sum);
                     } catch (err) {
                       setErrorMsg(err.message || "Failed to load backend data");
                     } finally {
@@ -731,8 +703,6 @@ const App = () => {
                     try {
                       const data = await fetchBackendResults();
                       setProviders(data.rows || []);
-                      const sum = await fetchSummary();
-                      setBackendSummary(sum);
                     } catch (err) {
                       setErrorMsg(err.message || "Failed to fetch results");
                     } finally {
@@ -746,6 +716,7 @@ const App = () => {
                 <button
                   className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
                   onClick={() => {
+                    // simple client-side export of ALL providers
                     const cols = ["provider_id","name","phone","city","status","confidence_score"];
                     const rows = providers.map((p) => cols.map((c) => `"${(p[c] ?? "").toString().replace(/"/g, '""')}"`).join(","));
                     const csv = [cols.join(","), ...rows].join("\n");
@@ -759,41 +730,6 @@ const App = () => {
                   Export Report
                 </button>
 
-                {/* >>> NEW: Sync to Supabase */}
-                <button
-                  className="w-full px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors"
-                  onClick={async () => {
-                    try {
-                      const res = await fetch(`${API_BASE}/sync/supabase`, { method: "POST" });
-                      if (!res.ok) throw new Error(`Sync failed: ${res.status}`);
-                      const out = await res.json();
-                      alert(out.ok ? `Synced run ${out.run_id}` : (out.error || "Sync failed"));
-                    } catch (e) { alert(e.message || "Sync failed"); }
-                  }}
-                >
-                  Sync to Supabase
-                </button>
-
-                {/* >>> NEW: Load from Supabase */}
-                <button
-                  className="w-full px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors"
-                  onClick={async () => {
-                    try {
-                      const res = await fetch(`${API_BASE}/results/db?limit=200`);
-                      if (!res.ok) throw new Error(`Load from DB failed: ${res.status}`);
-                      const data = await res.json();
-                      setProviders(data.rows || []);
-                      // Optionally refresh backend KPIs after loading from DB
-                      try {
-                        const sum = await fetchSummary();
-                        setBackendSummary(sum);
-                      } catch {}
-                    } catch (e) { alert(e.message || "Load failed"); }
-                  }}
-                >
-                  Load from Supabase
-                </button>
-
                 {loading && <div className="text-xs text-gray-500 mt-1">Loading...</div>}
                 {errorMsg && <div className="text-xs text-red-600 mt-1">{errorMsg}</div>}
               </div>
@@ -802,8 +738,10 @@ const App = () => {
 
           {/* Main Content */}
           <main className="flex-1">
+            {/* Tabs */}
+            {/* SPACING TUNE: add inner padding + larger bottom margin so cards don’t crowd */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
-              <div className="flex items-center gap-2 px-2 sm:px-4 py-2 sm:py-3 border-b border-gray-200 overflow-x-auto">
+              <div className="flex items-center gap-2 px-2 sm:px-4 py-2 sm:py-3 border-b border-gray-200 overflow-x-auto">{/* SPACING TUNE */}
                 <TabButton icon={BarChart3} label="Dashboard" active={activeTab === "dashboard"} onClick={() => setActiveTab("dashboard")} />
                 <TabButton icon={Users} label="Validation Results" active={activeTab === "validation"} onClick={() => setActiveTab("validation")} />
                 <TabButton icon={Search} label="Provider Search" active={activeTab === "search"} onClick={() => setActiveTab("search")} />
@@ -813,82 +751,21 @@ const App = () => {
               </div>
             </div>
 
+            {/* Tab Content */}
+            {/* SPACING TUNE: provide consistent top spacing for the content area */}
             <div className="space-y-0">
               {activeTab === "dashboard" && renderDashboard()}
               {activeTab === "validation" && renderValidationResults()}
               {activeTab === "search" && renderProviderSearch()}
               {activeTab === "ocr" && renderOCR()}
               {activeTab === "communications" && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-                  <div className="flex items-start justify-between gap-4 mb-6">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">Communication Center</h3>
-                      <p className="text-gray-600">
-                        Generate verification emails for providers that need review and an executive summary report.
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
-                        onClick={async () => {
-                          setCommsLoading(true);
-                          setCommsError("");
-                          try {
-                            const summary = await generateCommunications();
-                            setCommsSummary(summary);
-                          } catch (e) {
-                            console.error(e);
-                            setCommsError(e.message || "Failed to generate communications");
-                          } finally {
-                            setCommsLoading(false);
-                          }
-                        }}
-                      >
-                        {commsLoading ? "Generating..." : "Generate Emails & Report"}
-                      </button>
-                      <button
-                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
-                        onClick={downloadEmailsCsv}
-                      >
-                        Download Emails CSV
-                      </button>
-                      <button
-                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
-                        onClick={downloadSummaryReport}
-                      >
-                        Download Summary Report
-                      </button>
-                    </div>
-                  </div>
-
-                  {commsError && <div className="text-sm text-red-600 mb-4">{commsError}</div>}
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="text-2xl font-bold text-gray-900 mb-1">
-                        {commsSummary ? commsSummary.emails_count : "--"}
-                      </div>
-                      <div className="text-xs text-gray-600">Emails Generated</div>
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="text-sm font-medium text-gray-900">
-                        {commsSummary?.emails_csv || "generated_emails.csv"}
-                      </div>
-                      <div className="text-xs text-gray-600">Emails CSV Path</div>
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="text-sm font-medium text-gray-900">
-                        {commsSummary?.report_path || "validation_summary_report.txt"}
-                      </div>
-                      <div className="text-xs text-gray-600">Summary Report Path</div>
-                    </div>
-                  </div>
-
-                  {commsSummary?.generated_at && (
-                    <div className="mt-4 text-xs text-gray-500">
-                      Generated at: {new Date(commsSummary.generated_at).toLocaleString()}
-                    </div>
-                  )}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+                  <Mail className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Communication Center</h3>
+                  <p className="text-gray-600 mb-6">Email generation and provider communications will appear here</p>
+                  <button className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">
+                    Generate Emails
+                  </button>
                 </div>
               )}
               {activeTab === "analytics" && renderAnalytics()}
@@ -947,27 +824,7 @@ const App = () => {
                 </div>
               </div>
               <div className="mt-6 pt-6 border-t border-gray-200 flex gap-3">
-                <button
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                  onClick={async () => {
-                    try {
-                      const params = new URLSearchParams({
-                        provider_name: selectedProvider.name || "",
-                        current_phone: selectedProvider.phone || "",
-                        suggested_phone: selectedProvider.suggested_phone || "",
-                        status: selectedProvider.status || ""
-                      });
-                      const res = await fetch(`${API_BASE}/email-template?` + params.toString());
-                      if (!res.ok) throw new Error(`Email template failed: ${res.status}`);
-                      const { email_body } = await res.json();
-                      const blob = new Blob([email_body], { type: "text/plain;charset=utf-8" });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url; a.download = `email_${selectedProvider.provider_id}.txt`; a.click();
-                      URL.revokeObjectURL(url);
-                    } catch (e) { console.error(e); }
-                  }}
-                >
+                <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
                   Send Email
                 </button>
                 <button className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
@@ -987,7 +844,7 @@ const App = () => {
 
 /* ---------- Reusable components ---------- */
 const StatCard = ({ icon: Icon, label, value, subtitle, color }) => (
-  <div className={`${color} rounded-xl p-6 text-white shadow-lg min-h-[120px] flex flex-col justify-between`}>
+  <div className={`${color} rounded-xl p-6 text-white shadow-lg min-h-[120px] flex flex-col justify-between`}>{/* SPACING TUNE: consistent height */}
     <Icon className="w-8 h-8 opacity-90" />
     <div>
       <div className="text-3xl font-bold leading-tight">{value}</div>
